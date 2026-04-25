@@ -15,6 +15,7 @@ frontend/dist/
 # Env files (local only)
 .env.*
 !.env.example
+!frontend/.env.production
 
 # IDE
 .idea/
