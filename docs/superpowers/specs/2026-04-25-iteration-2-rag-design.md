@@ -152,6 +152,14 @@ langchain-community>=0.3.0
 
 No changes needed. Mocked embeddings mean `OPENAI_API_KEY` is not required in GitHub Actions.
 
+## Deployment
+
+`OPENAI_API_KEY` must be set in Railway for production (used by `index_pdf` on every upload):
+```bash
+railway variables set OPENAI_API_KEY=<your_key>
+```
+This is not needed in Vercel (frontend never calls OpenAI directly).
+
 ## What stays the same
 
 - Frontend UI — no visible changes
