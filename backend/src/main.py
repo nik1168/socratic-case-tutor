@@ -5,7 +5,9 @@ from pathlib import Path
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 
+from src.claude_service import ask_claude
 from src.models import ChatRequest, ChatResponse, UploadResponse
+from src.pdf_service import extract_text
 
 UPLOAD_DIR = Path(__file__).resolve().parent.parent / "uploads"
 UPLOAD_DIR.mkdir(exist_ok=True)
@@ -37,3 +39,13 @@ async def upload(file: UploadFile = File(...)):
     content = await file.read()
     dest.write_bytes(content)
     return UploadResponse(file_id=file_id)
+
+
+@app.post("/chat", response_model=ChatResponse)
+def chat(request: ChatRequest):
+    pdf_path = UPLOAD_DIR / f"{request.file_id}.pdf"
+    if not pdf_path.exists():
+        raise HTTPException(status_code=404, detail="File not found. Please upload the PDF again.")
+    pdf_text = extract_text(pdf_path)
+    response_text = ask_claude(pdf_text, request.message)
+    return ChatResponse(response=response_text)
