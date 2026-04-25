@@ -9,12 +9,12 @@ backend/uploads/
 .env
 
 # Node
-frontend/node_modules/
+node_modules/
 frontend/dist/
 
 # Env files (local only)
-.env.local
-*.env.local
+.env.*
+!.env.example
 
 # IDE
 .idea/
