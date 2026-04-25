@@ -2,7 +2,17 @@ import os
 
 import anthropic
 
-_client = anthropic.Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"))
+_client: anthropic.Anthropic | None = None
+
+
+def _get_client() -> anthropic.Anthropic:
+    global _client
+    if _client is None:
+        api_key = os.environ.get("ANTHROPIC_API_KEY")
+        if not api_key:
+            raise RuntimeError("ANTHROPIC_API_KEY environment variable is not set")
+        _client = anthropic.Anthropic(api_key=api_key)
+    return _client
 
 SYSTEM_PROMPT = """You are an AI tutor helping students analyze business case studies.
 Your role is to help students think critically about the cases they are reading.
@@ -11,7 +21,7 @@ Be concise and focused."""
 
 
 def ask_claude(pdf_text: str, question: str) -> str:
-    message = _client.messages.create(
+    message = _get_client().messages.create(
         model="claude-sonnet-4-6",
         max_tokens=1024,
         system=SYSTEM_PROMPT,
