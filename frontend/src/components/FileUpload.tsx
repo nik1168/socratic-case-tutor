@@ -24,6 +24,7 @@ export default function FileUpload({ onUpload }: Props) {
     } catch {
       setError('Upload failed. Check that the backend is running.')
       setStatus('error')
+      if (inputRef.current) inputRef.current.value = ''
     }
   }
 

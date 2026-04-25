@@ -1,4 +1,5 @@
-const API_URL = import.meta.env.VITE_API_URL as string
+const API_URL = import.meta.env.VITE_API_URL
+if (!API_URL) throw new Error('VITE_API_URL is not set')
 
 export async function uploadPdf(file: File): Promise<string> {
   const form = new FormData()
@@ -6,7 +7,9 @@ export async function uploadPdf(file: File): Promise<string> {
   const res = await fetch(`${API_URL}/upload`, { method: 'POST', body: form })
   if (!res.ok) throw new Error(`Upload failed: ${res.statusText}`)
   const data = await res.json()
-  return data.file_id as string
+  const fileId = data?.file_id
+  if (typeof fileId !== 'string' || fileId === '') throw new Error('Unexpected response: missing file_id')
+  return fileId
 }
 
 export async function sendMessage(fileId: string, message: string): Promise<string> {
@@ -17,5 +20,7 @@ export async function sendMessage(fileId: string, message: string): Promise<stri
   })
   if (!res.ok) throw new Error(`Chat failed: ${res.statusText}`)
   const data = await res.json()
-  return data.response as string
+  const response = data?.response
+  if (typeof response !== 'string') throw new Error('Unexpected response: missing response')
+  return response
 }
