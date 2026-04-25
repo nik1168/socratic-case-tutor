@@ -29,7 +29,8 @@ def health():
 
 @app.post("/upload", response_model=UploadResponse)
 async def upload(file: UploadFile = File(...)):
-    if file.content_type != "application/pdf":
+    base_type = (file.content_type or "").split(";")[0].strip()
+    if base_type != "application/pdf":
         raise HTTPException(status_code=400, detail="Only PDF files are accepted")
     file_id = str(uuid.uuid4())
     dest = UPLOAD_DIR / f"{file_id}.pdf"

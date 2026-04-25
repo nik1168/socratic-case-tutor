@@ -1,4 +1,5 @@
 import io
+import uuid
 
 
 def test_upload_returns_file_id(client, fake_pdf_bytes):
@@ -9,7 +10,7 @@ def test_upload_returns_file_id(client, fake_pdf_bytes):
     assert response.status_code == 200
     body = response.json()
     assert "file_id" in body
-    assert len(body["file_id"]) == 36  # UUID format
+    uuid.UUID(body["file_id"])  # raises ValueError if not a valid UUID
 
 
 def test_upload_rejects_non_pdf(client):
