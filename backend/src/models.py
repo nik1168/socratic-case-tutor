@@ -1,4 +1,6 @@
-from pydantic import BaseModel
+from typing import Literal
+
+from pydantic import BaseModel, Field
 
 
 class UploadResponse(BaseModel):
@@ -6,14 +8,14 @@ class UploadResponse(BaseModel):
 
 
 class Message(BaseModel):
-    role: str
+    role: Literal["user", "assistant"]
     content: str
 
 
 class ChatRequest(BaseModel):
     file_id: str
     message: str
-    conversation_history: list[Message] = []
+    conversation_history: list[Message] = Field(default_factory=list)
 
 
 class ChatResponse(BaseModel):
