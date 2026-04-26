@@ -15,7 +15,7 @@ export async function uploadPdf(file: File): Promise<string> {
 export async function sendMessage(
   fileId: string,
   message: string,
-  conversationHistory: Array<{ role: string; content: string }> = []
+  conversationHistory: Array<{ role: 'user' | 'assistant'; content: string }> = []
 ): Promise<string> {
   const res = await fetch(`${API_URL}/chat`, {
     method: 'POST',

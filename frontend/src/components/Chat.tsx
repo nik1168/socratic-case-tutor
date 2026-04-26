@@ -4,6 +4,7 @@ import { sendMessage } from '../api'
 interface Message {
   role: 'user' | 'assistant'
   content: string
+  isError?: boolean
 }
 
 interface Props {
@@ -20,7 +21,7 @@ export default function Chat({ fileId, fileName }: Props) {
     const trimmed = input.trim()
     if (!trimmed || loading) return
     const userMessage: Message = { role: 'user', content: trimmed }
-    const history = [...messages]
+    const history = messages.filter((m) => !m.isError)
     setMessages((prev) => [...prev, userMessage])
     setInput('')
     setLoading(true)
@@ -30,7 +31,7 @@ export default function Chat({ fileId, fileName }: Props) {
     } catch {
       setMessages((prev) => [
         ...prev,
-        { role: 'assistant', content: 'Error: could not reach the backend.' },
+        { role: 'assistant', content: 'Error: could not reach the backend.', isError: true },
       ])
     } finally {
       setLoading(false)
