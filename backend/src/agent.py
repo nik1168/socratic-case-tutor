@@ -4,6 +4,7 @@ from langchain_anthropic import ChatAnthropic
 from langchain_core.documents import Document
 from langchain_core.messages import BaseMessage
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain_core.runnables import RunnableConfig
 from langgraph.graph import END, StateGraph
 
 from src.rag_service import get_retriever
@@ -122,12 +123,19 @@ def build_graph(file_id: str):
 
 async def run_agent(file_id: str, message: str, chat_history: list[BaseMessage]) -> dict:
     graph = build_graph(file_id)
-    result = await graph.ainvoke({
-        "input": message,
-        "chat_history": chat_history,
-        "context": [],
-        "assessment": "",
-        "answer": "",
-        "response_type": "",
-    })
+    result = await graph.ainvoke(
+        {
+            "input": message,
+            "chat_history": chat_history,
+            "context": [],
+            "assessment": "",
+            "answer": "",
+            "response_type": "",
+        },
+        config=RunnableConfig(
+            run_name=f"chat-{file_id[:8]}",
+            tags=["case-tutor"],
+            metadata={"file_id": file_id, "history_length": len(chat_history)},
+        ),
+    )
     return {"answer": result["answer"], "response_type": result["response_type"]}

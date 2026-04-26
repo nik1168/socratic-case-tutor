@@ -48,7 +48,7 @@ async def test_run_agent_passes_chat_history():
     history = [HumanMessage(content="First question"), AIMessage(content="First answer")]
     captured = {}
 
-    async def capture_invoke(state):
+    async def capture_invoke(state, config=None):
         captured["chat_history"] = state["chat_history"]
         return {**state, "answer": "ok", "response_type": "socratic_response"}
 
@@ -67,3 +67,24 @@ async def test_run_agent_raises_value_error_for_unknown_file():
     with patch("src.agent.get_retriever", side_effect=ValueError("No index found for file_id: unknown")):
         with pytest.raises(ValueError, match="No index found"):
             await run_agent("unknown-file", "Hello", [])
+
+
+async def test_run_agent_passes_runnable_config():
+    captured = {}
+
+    async def capture_invoke(state, config=None):
+        captured["config"] = config
+        return {**state, "answer": "ok", "response_type": "socratic_response"}
+
+    mock_graph = MagicMock()
+    mock_graph.ainvoke = capture_invoke
+
+    with patch("src.agent.build_graph", return_value=mock_graph):
+        await run_agent("file-abc123", "Hello", [])
+
+    config = captured["config"]
+    assert isinstance(config, dict)
+    assert config["metadata"]["file_id"] == "file-abc123"
+    assert config["metadata"]["history_length"] == 0
+    assert "case-tutor" in config["tags"]
+    assert config["run_name"] == "chat-file-abc"
