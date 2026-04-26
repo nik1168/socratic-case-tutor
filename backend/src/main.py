@@ -47,12 +47,12 @@ async def upload(file: UploadFile = File(...)):
 
 
 @app.post("/chat", response_model=ChatResponse)
-def chat(request: ChatRequest):
+async def chat(request: ChatRequest):
     pdf_path = UPLOAD_DIR / f"{request.file_id}.pdf"
     if not pdf_path.exists():
         raise HTTPException(status_code=404, detail="File not found. Please upload the PDF again.")
     chain = get_rag_chain(request.file_id)
-    result = chain.invoke({
+    result = await chain.ainvoke({
         "input": request.message,
         "chat_history": [
             HumanMessage(content=m.content) if m.role == "user"
@@ -60,4 +60,7 @@ def chat(request: ChatRequest):
             for m in request.conversation_history
         ],
     })
-    return ChatResponse(response=result["answer"])
+    answer = result.get("answer")
+    if not answer:
+        raise HTTPException(status_code=502, detail="The AI chain returned an unexpected response.")
+    return ChatResponse(response=answer)
