@@ -65,12 +65,14 @@ def build_graph(file_id: str):
             "context": _format_context(state["context"]),
             "input": state["input"],
         })
-        assessment = result.content.strip().lower()
+        raw = result.content
+        assessment = (raw if isinstance(raw, str) else "").strip().lower()
         if assessment not in ("clarify", "socratic"):
             assessment = "socratic"
         return {**state, "assessment": assessment}
 
     def route(state: AgentState) -> str:
+        # Any non-clarify assessment (including the "socratic" fallback) routes to socratic_respond
         return "clarify" if state["assessment"] == "clarify" else "socratic_respond"
 
     async def clarify(state: AgentState) -> AgentState:
