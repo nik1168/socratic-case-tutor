@@ -59,6 +59,8 @@ def test_chat_passes_conversation_history_to_agent(client, fake_pdf_bytes):
         )
 
     _file_id, _message, chat_history = mock_run.call_args[0]
+    assert _file_id == file_id
+    assert _message == "Follow-up"
     assert len(chat_history) == 2
     assert isinstance(chat_history[0], HumanMessage)
     assert chat_history[0].content == "First question"
@@ -66,17 +68,22 @@ def test_chat_passes_conversation_history_to_agent(client, fake_pdf_bytes):
     assert chat_history[1].content == "First answer"
 
 
-def test_chat_returns_404_when_chroma_index_missing(client, fake_pdf_bytes):
+def test_chat_returns_404_when_chroma_index_missing(client, fake_pdf_bytes, tmp_path, monkeypatch):
+    import src.main as main_module
+
     upload_response = client.post(
         "/upload",
         files={"file": ("case.pdf", io.BytesIO(fake_pdf_bytes), "application/pdf")},
     )
     file_id = upload_response.json()["file_id"]
 
-    with patch("src.main.run_agent", side_effect=ValueError("No index found")):
-        response = client.post(
-            "/chat",
-            json={"file_id": file_id, "message": "hello"},
-        )
+    # Chroma dir points somewhere with no index for this file_id
+    monkeypatch.setattr(main_module, "CHROMA_DIR", tmp_path / "empty_chroma")
+
+    response = client.post(
+        "/chat",
+        json={"file_id": file_id, "message": "hello"},
+    )
 
     assert response.status_code == 404
+    assert response.json()["detail"] == "File not found. Please upload the PDF again."

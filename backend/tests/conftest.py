@@ -5,9 +5,15 @@ from src.main import app
 
 
 @pytest.fixture
-def mock_index_pdf(monkeypatch):
+def mock_index_pdf(tmp_path, monkeypatch):
     import src.main as main_module
-    mock = MagicMock()
+    chroma_dir = tmp_path / "chroma"
+    monkeypatch.setattr(main_module, "CHROMA_DIR", chroma_dir)
+
+    def _fake_index(file_id, dest):
+        (chroma_dir / file_id).mkdir(parents=True, exist_ok=True)
+
+    mock = MagicMock(side_effect=_fake_index)
     monkeypatch.setattr(main_module, "index_pdf", mock)
     return mock
 

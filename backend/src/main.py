@@ -12,7 +12,7 @@ from langchain_core.messages import AIMessage, HumanMessage
 
 from src.agent import run_agent
 from src.models import ChatRequest, ChatResponse, UploadResponse
-from src.rag_service import index_pdf
+from src.rag_service import CHROMA_DIR, index_pdf
 
 UPLOAD_DIR = Path(__file__).resolve().parent.parent / "uploads"
 UPLOAD_DIR.mkdir(exist_ok=True)
@@ -52,18 +52,18 @@ async def chat(request: ChatRequest):
     pdf_path = UPLOAD_DIR / f"{request.file_id}.pdf"
     if not pdf_path.exists():
         raise HTTPException(status_code=404, detail="File not found. Please upload the PDF again.")
-    try:
-        result = await run_agent(
-            request.file_id,
-            request.message,
-            [
-                HumanMessage(content=m.content) if m.role == "user"
-                else AIMessage(content=m.content)
-                for m in request.conversation_history
-            ],
-        )
-    except ValueError:
+    chroma_path = CHROMA_DIR / request.file_id
+    if not chroma_path.exists():
         raise HTTPException(status_code=404, detail="File not found. Please upload the PDF again.")
+    result = await run_agent(
+        request.file_id,
+        request.message,
+        [
+            HumanMessage(content=m.content) if m.role == "user"
+            else AIMessage(content=m.content)
+            for m in request.conversation_history
+        ],
+    )
     answer = result.get("answer")
     response_type = result.get("response_type")
     if not answer or not response_type:
