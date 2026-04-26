@@ -12,6 +12,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from src.claude_service import ask_claude
 from src.models import ChatRequest, ChatResponse, UploadResponse
 from src.pdf_service import extract_text
+from src.rag_service import index_pdf
 
 UPLOAD_DIR = Path(__file__).resolve().parent.parent / "uploads"
 UPLOAD_DIR.mkdir(exist_ok=True)
@@ -42,6 +43,7 @@ async def upload(file: UploadFile = File(...)):
     dest = UPLOAD_DIR / f"{file_id}.pdf"
     content = await file.read()
     dest.write_bytes(content)
+    index_pdf(file_id, dest)
     return UploadResponse(file_id=file_id)
 
 

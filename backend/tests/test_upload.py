@@ -19,3 +19,15 @@ def test_upload_rejects_non_pdf(client):
         files={"file": ("doc.txt", io.BytesIO(b"hello"), "text/plain")},
     )
     assert response.status_code == 400
+
+
+def test_upload_calls_index_pdf(client, mock_index_pdf, fake_pdf_bytes):
+    response = client.post(
+        "/upload",
+        files={"file": ("case.pdf", io.BytesIO(fake_pdf_bytes), "application/pdf")},
+    )
+    assert response.status_code == 200
+    mock_index_pdf.assert_called_once()
+    file_id = response.json()["file_id"]
+    called_file_id, _ = mock_index_pdf.call_args[0]
+    assert called_file_id == file_id
