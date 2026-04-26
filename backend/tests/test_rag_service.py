@@ -1,7 +1,6 @@
 from pathlib import Path
 from unittest.mock import patch
 
-import pytest
 from langchain_core.documents import Document
 from langchain_core.embeddings import Embeddings
 
@@ -32,7 +31,8 @@ def test_index_pdf_creates_chroma_directory(tmp_path, monkeypatch):
                 metadata={"page": 0},
             )
         ]
-        with patch("src.rag_service.OpenAIEmbeddings", return_value=FakeEmbeddings()):
+        with patch("src.rag_service.OpenAIEmbeddings", return_value=FakeEmbeddings()) as mock_emb:
             index_pdf("file-123", fake_pdf)
+        mock_emb.assert_called_once_with(model="text-embedding-3-small")
 
     assert (chroma_base / "file-123").exists()
