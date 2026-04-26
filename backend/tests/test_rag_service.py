@@ -4,8 +4,9 @@ from unittest.mock import patch
 
 from langchain_core.documents import Document
 from langchain_core.embeddings import Embeddings
+from langchain_core.runnables import Runnable, RunnableLambda
 
-from src.rag_service import index_pdf
+from src.rag_service import index_pdf, get_rag_chain
 
 
 class FakeEmbeddings(Embeddings):
@@ -37,11 +38,6 @@ def test_index_pdf_creates_chroma_directory(tmp_path, monkeypatch):
         mock_emb.assert_called_once_with(model="text-embedding-3-small")
 
     assert (chroma_base / "file-123").exists()
-
-
-from langchain_core.runnables import Runnable, RunnableLambda
-
-from src.rag_service import get_rag_chain
 
 
 def test_get_rag_chain_returns_runnable(tmp_path, monkeypatch):
