@@ -7,6 +7,7 @@ from langchain_classic.chains.combine_documents import create_stuff_documents_ch
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.runnables import Runnable
+from langchain_core.vectorstores import VectorStoreRetriever
 from langchain_openai import OpenAIEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
@@ -31,19 +32,21 @@ def index_pdf(file_id: str, file_path: Path) -> None:
     )
 
 
-def get_rag_chain(file_id: str) -> Runnable:
+def get_retriever(file_id: str) -> VectorStoreRetriever:
     chroma_path = CHROMA_DIR / file_id
     if not chroma_path.exists():
         raise ValueError(f"No index found for file_id: {file_id}")
-
-    llm = ChatAnthropic(model="claude-sonnet-4-6", max_tokens=1024)
     embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
-
     vectorstore = Chroma(
         persist_directory=str(chroma_path),
         embedding_function=embeddings,
     )
-    retriever = vectorstore.as_retriever(search_kwargs={"k": 4})
+    return vectorstore.as_retriever(search_kwargs={"k": 4})
+
+
+def get_rag_chain(file_id: str) -> Runnable:
+    retriever = get_retriever(file_id)
+    llm = ChatAnthropic(model="claude-sonnet-4-6", max_tokens=1024)
 
     contextualize_prompt = ChatPromptTemplate.from_messages([
         (
