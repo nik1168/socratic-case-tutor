@@ -1,5 +1,5 @@
 import io
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 
 def test_chat_returns_response(client, fake_pdf_bytes):
@@ -9,22 +9,19 @@ def test_chat_returns_response(client, fake_pdf_bytes):
     )
     file_id = upload_response.json()["file_id"]
 
-    fake_chain = MagicMock()
-    fake_chain.ainvoke = AsyncMock(return_value={"answer": "What aspects of this case interest you most?"})
-
-    with patch("src.main.get_rag_chain", return_value=fake_chain):
+    with patch(
+        "src.main.run_agent",
+        new_callable=AsyncMock,
+        return_value={"answer": "What aspects of this case interest you most?", "response_type": "socratic_response"},
+    ):
         response = client.post(
             "/chat",
-            json={
-                "file_id": file_id,
-                "message": "What is this case about?",
-                "conversation_history": [],
-            },
+            json={"file_id": file_id, "message": "What is this case about?", "conversation_history": []},
         )
 
     assert response.status_code == 200
-    assert "response" in response.json()
-    assert len(response.json()["response"]) > 0
+    assert response.json()["response"] == "What aspects of this case interest you most?"
+    assert response.json()["response_type"] == "socratic_response"
 
 
 def test_chat_returns_404_for_unknown_file_id(client):
@@ -35,7 +32,7 @@ def test_chat_returns_404_for_unknown_file_id(client):
     assert response.status_code == 404
 
 
-def test_chat_passes_conversation_history_to_chain(client, fake_pdf_bytes):
+def test_chat_passes_conversation_history_to_agent(client, fake_pdf_bytes):
     from langchain_core.messages import AIMessage, HumanMessage
 
     upload_response = client.post(
@@ -44,10 +41,11 @@ def test_chat_passes_conversation_history_to_chain(client, fake_pdf_bytes):
     )
     file_id = upload_response.json()["file_id"]
 
-    fake_chain = MagicMock()
-    fake_chain.ainvoke = AsyncMock(return_value={"answer": "Sure."})
-
-    with patch("src.main.get_rag_chain", return_value=fake_chain):
+    with patch(
+        "src.main.run_agent",
+        new_callable=AsyncMock,
+        return_value={"answer": "Sure.", "response_type": "socratic_response"},
+    ) as mock_run:
         client.post(
             "/chat",
             json={
@@ -60,9 +58,25 @@ def test_chat_passes_conversation_history_to_chain(client, fake_pdf_bytes):
             },
         )
 
-    call_kwargs = fake_chain.ainvoke.call_args[0][0]
-    assert len(call_kwargs["chat_history"]) == 2
-    assert isinstance(call_kwargs["chat_history"][0], HumanMessage)
-    assert call_kwargs["chat_history"][0].content == "First question"
-    assert isinstance(call_kwargs["chat_history"][1], AIMessage)
-    assert call_kwargs["chat_history"][1].content == "First answer"
+    _file_id, _message, chat_history = mock_run.call_args[0]
+    assert len(chat_history) == 2
+    assert isinstance(chat_history[0], HumanMessage)
+    assert chat_history[0].content == "First question"
+    assert isinstance(chat_history[1], AIMessage)
+    assert chat_history[1].content == "First answer"
+
+
+def test_chat_returns_404_when_chroma_index_missing(client, fake_pdf_bytes):
+    upload_response = client.post(
+        "/upload",
+        files={"file": ("case.pdf", io.BytesIO(fake_pdf_bytes), "application/pdf")},
+    )
+    file_id = upload_response.json()["file_id"]
+
+    with patch("src.main.run_agent", side_effect=ValueError("No index found")):
+        response = client.post(
+            "/chat",
+            json={"file_id": file_id, "message": "hello"},
+        )
+
+    assert response.status_code == 404

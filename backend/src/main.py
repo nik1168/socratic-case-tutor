@@ -10,8 +10,9 @@ from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from langchain_core.messages import AIMessage, HumanMessage
 
+from src.agent import run_agent
 from src.models import ChatRequest, ChatResponse, UploadResponse
-from src.rag_service import get_rag_chain, index_pdf
+from src.rag_service import index_pdf
 
 UPLOAD_DIR = Path(__file__).resolve().parent.parent / "uploads"
 UPLOAD_DIR.mkdir(exist_ok=True)
@@ -51,16 +52,20 @@ async def chat(request: ChatRequest):
     pdf_path = UPLOAD_DIR / f"{request.file_id}.pdf"
     if not pdf_path.exists():
         raise HTTPException(status_code=404, detail="File not found. Please upload the PDF again.")
-    chain = get_rag_chain(request.file_id)
-    result = await chain.ainvoke({
-        "input": request.message,
-        "chat_history": [
-            HumanMessage(content=m.content) if m.role == "user"
-            else AIMessage(content=m.content)
-            for m in request.conversation_history
-        ],
-    })
+    try:
+        result = await run_agent(
+            request.file_id,
+            request.message,
+            [
+                HumanMessage(content=m.content) if m.role == "user"
+                else AIMessage(content=m.content)
+                for m in request.conversation_history
+            ],
+        )
+    except ValueError:
+        raise HTTPException(status_code=404, detail="File not found. Please upload the PDF again.")
     answer = result.get("answer")
-    if not answer:
-        raise HTTPException(status_code=502, detail="The AI chain returned an unexpected response.")
-    return ChatResponse(response=answer)
+    response_type = result.get("response_type")
+    if not answer or not response_type:
+        raise HTTPException(status_code=502, detail="The AI agent returned an unexpected response.")
+    return ChatResponse(response=answer, response_type=response_type)
