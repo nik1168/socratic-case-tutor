@@ -70,6 +70,7 @@ async def test_run_agent_raises_value_error_for_unknown_file():
 
 
 async def test_run_agent_passes_runnable_config():
+    file_id = "file-abc123"
     captured = {}
 
     async def capture_invoke(state, config=None):
@@ -80,11 +81,11 @@ async def test_run_agent_passes_runnable_config():
     mock_graph.ainvoke = capture_invoke
 
     with patch("src.agent.build_graph", return_value=mock_graph):
-        await run_agent("file-abc123", "Hello", [])
+        await run_agent(file_id, "Hello", [])
 
     config = captured["config"]
     assert isinstance(config, dict)
-    assert config["metadata"]["file_id"] == "file-abc123"
+    assert config["metadata"]["file_id"] == file_id
     assert config["metadata"]["history_length"] == 0
     assert "case-tutor" in config["tags"]
-    assert config["run_name"] == "chat-file-abc"
+    assert config["run_name"] == f"chat-{file_id[:8]}"
