@@ -1,11 +1,11 @@
 import { useState } from 'react'
-import { sendMessage } from '../api'
+import { sendMessage, type ResponseType } from '../api'
 
 interface Message {
   role: 'user' | 'assistant'
   content: string
   isError?: boolean
-  responseType?: string
+  responseType?: ResponseType
 }
 
 interface Props {
@@ -22,7 +22,7 @@ export default function Chat({ fileId, fileName }: Props) {
     const trimmed = input.trim()
     if (!trimmed || loading) return
     const userMessage: Message = { role: 'user', content: trimmed }
-    const history = messages.filter((m) => !m.isError)
+    const history = messages.filter((m) => !m.isError).map(({ role, content }) => ({ role, content }))
     setMessages((prev) => [...prev, userMessage])
     setInput('')
     setLoading(true)
