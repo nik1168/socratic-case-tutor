@@ -19,10 +19,10 @@ describe('FileUpload', () => {
   it('calls onUpload with fileId and fileName on successful upload', async () => {
     vi.mocked(api.uploadPdf).mockResolvedValue('file-123')
     const onUpload = vi.fn()
-    render(<FileUpload onUpload={onUpload} />)
+    const { container } = render(<FileUpload onUpload={onUpload} />)
 
     const file = new File(['%PDF-1.4'], 'case.pdf', { type: 'application/pdf' })
-    const input = document.querySelector('input[type="file"]') as HTMLInputElement
+    const input = container.querySelector('input[type="file"]') as HTMLInputElement
     await userEvent.upload(input, file)
 
     await waitFor(() => expect(onUpload).toHaveBeenCalledWith('file-123', 'case.pdf'))
@@ -30,10 +30,10 @@ describe('FileUpload', () => {
 
   it('shows an error message on upload failure', async () => {
     vi.mocked(api.uploadPdf).mockRejectedValue(new Error('Server error'))
-    render(<FileUpload onUpload={vi.fn()} />)
+    const { container } = render(<FileUpload onUpload={vi.fn()} />)
 
     const file = new File(['%PDF-1.4'], 'case.pdf', { type: 'application/pdf' })
-    const input = document.querySelector('input[type="file"]') as HTMLInputElement
+    const input = container.querySelector('input[type="file"]') as HTMLInputElement
     await userEvent.upload(input, file)
 
     await waitFor(() =>

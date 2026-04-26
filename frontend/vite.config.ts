@@ -9,7 +9,6 @@ export default defineConfig({
     tailwindcss(),
   ],
   test: {
-    globals: true,
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
     env: {
