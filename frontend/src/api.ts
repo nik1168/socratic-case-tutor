@@ -12,11 +12,19 @@ export async function uploadPdf(file: File): Promise<string> {
   return fileId
 }
 
-export async function sendMessage(fileId: string, message: string): Promise<string> {
+export async function sendMessage(
+  fileId: string,
+  message: string,
+  conversationHistory: Array<{ role: string; content: string }> = []
+): Promise<string> {
   const res = await fetch(`${API_URL}/chat`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ file_id: fileId, message }),
+    body: JSON.stringify({
+      file_id: fileId,
+      message,
+      conversation_history: conversationHistory,
+    }),
   })
   if (!res.ok) throw new Error(`Chat failed: ${res.statusText}`)
   const data = await res.json()

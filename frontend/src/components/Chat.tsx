@@ -20,11 +20,12 @@ export default function Chat({ fileId, fileName }: Props) {
     const trimmed = input.trim()
     if (!trimmed || loading) return
     const userMessage: Message = { role: 'user', content: trimmed }
+    const history = [...messages]
     setMessages((prev) => [...prev, userMessage])
     setInput('')
     setLoading(true)
     try {
-      const reply = await sendMessage(fileId, trimmed)
+      const reply = await sendMessage(fileId, trimmed, history)
       setMessages((prev) => [...prev, { role: 'assistant', content: reply }])
     } catch {
       setMessages((prev) => [
