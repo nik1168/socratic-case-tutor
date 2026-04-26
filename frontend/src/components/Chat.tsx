@@ -5,6 +5,7 @@ interface Message {
   role: 'user' | 'assistant'
   content: string
   isError?: boolean
+  responseType?: string
 }
 
 interface Props {
@@ -26,8 +27,8 @@ export default function Chat({ fileId, fileName }: Props) {
     setInput('')
     setLoading(true)
     try {
-      const reply = await sendMessage(fileId, trimmed, history)
-      setMessages((prev) => [...prev, { role: 'assistant', content: reply }])
+      const { response: reply, responseType } = await sendMessage(fileId, trimmed, history)
+      setMessages((prev) => [...prev, { role: 'assistant', content: reply, responseType }])
     } catch {
       setMessages((prev) => [
         ...prev,
@@ -58,6 +59,9 @@ export default function Chat({ fileId, fileName }: Props) {
                 : 'mr-auto bg-white border text-gray-800'
             }`}
           >
+            {msg.role === 'assistant' && msg.responseType === 'clarification' && (
+              <p className="text-xs text-blue-500 mb-1 font-medium">Clarifying question</p>
+            )}
             {msg.content}
           </div>
         ))}

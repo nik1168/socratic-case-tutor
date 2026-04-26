@@ -16,7 +16,7 @@ export async function sendMessage(
   fileId: string,
   message: string,
   conversationHistory: Array<{ role: 'user' | 'assistant'; content: string }> = []
-): Promise<string> {
+): Promise<{ response: string; responseType: string }> {
   const res = await fetch(`${API_URL}/chat`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -29,6 +29,8 @@ export async function sendMessage(
   if (!res.ok) throw new Error(`Chat failed: ${res.statusText}`)
   const data = await res.json()
   const response = data?.response
+  const responseType = data?.response_type
   if (typeof response !== 'string') throw new Error('Unexpected response: missing response')
-  return response
+  if (typeof responseType !== 'string') throw new Error('Unexpected response: missing response_type')
+  return { response, responseType }
 }
