@@ -1,5 +1,5 @@
 import io
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 
 def test_chat_returns_response(client, fake_pdf_bytes):
@@ -9,12 +9,18 @@ def test_chat_returns_response(client, fake_pdf_bytes):
     )
     file_id = upload_response.json()["file_id"]
 
-    with patch("src.main.extract_text", return_value="This is the case study text."):
-        with patch("src.main.ask_claude", return_value="What aspects of this case interest you most?"):
-            response = client.post(
-                "/chat",
-                json={"file_id": file_id, "message": "What is this case about?"},
-            )
+    fake_chain = MagicMock()
+    fake_chain.invoke.return_value = {"answer": "What aspects of this case interest you most?"}
+
+    with patch("src.main.get_rag_chain", return_value=fake_chain):
+        response = client.post(
+            "/chat",
+            json={
+                "file_id": file_id,
+                "message": "What is this case about?",
+                "conversation_history": [],
+            },
+        )
 
     assert response.status_code == 200
     assert "response" in response.json()

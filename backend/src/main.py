@@ -8,11 +8,10 @@ load_dotenv()
 
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+from langchain_core.messages import AIMessage, HumanMessage
 
-from src.claude_service import ask_claude
 from src.models import ChatRequest, ChatResponse, UploadResponse
-from src.pdf_service import extract_text
-from src.rag_service import index_pdf
+from src.rag_service import get_rag_chain, index_pdf
 
 UPLOAD_DIR = Path(__file__).resolve().parent.parent / "uploads"
 UPLOAD_DIR.mkdir(exist_ok=True)
@@ -52,6 +51,13 @@ def chat(request: ChatRequest):
     pdf_path = UPLOAD_DIR / f"{request.file_id}.pdf"
     if not pdf_path.exists():
         raise HTTPException(status_code=404, detail="File not found. Please upload the PDF again.")
-    pdf_text = extract_text(pdf_path)
-    response_text = ask_claude(pdf_text, request.message)
-    return ChatResponse(response=response_text)
+    chain = get_rag_chain(request.file_id)
+    result = chain.invoke({
+        "input": request.message,
+        "chat_history": [
+            HumanMessage(content=m.content) if m.role == "user"
+            else AIMessage(content=m.content)
+            for m in request.conversation_history
+        ],
+    })
+    return ChatResponse(response=result["answer"])
