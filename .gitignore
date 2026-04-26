@@ -4,6 +4,7 @@ backend/__pycache__/
 backend/src/__pycache__/
 backend/tests/__pycache__/
 backend/uploads/
+backend/chroma/
 backend/mock/
 *.pyc
 *.pyo

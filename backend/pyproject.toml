@@ -7,7 +7,13 @@ requires-python = ">=3.12"
 dependencies = [
     "anthropic>=0.97.0",
     "fastapi>=0.136.1",
+    "langchain>=0.3.0",
+    "langchain-anthropic>=0.3.0",
+    "langchain-chroma>=0.1.0",
+    "langchain-community>=0.3.0",
+    "langchain-openai>=0.2.0",
     "pypdf>=6.10.2",
+    "python-dotenv>=1.0.0",
     "python-multipart>=0.0.26",
     "uvicorn[standard]>=0.46.0",
 ]
