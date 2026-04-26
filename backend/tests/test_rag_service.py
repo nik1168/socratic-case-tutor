@@ -1,3 +1,4 @@
+import pytest
 from pathlib import Path
 from unittest.mock import patch
 
@@ -36,3 +37,37 @@ def test_index_pdf_creates_chroma_directory(tmp_path, monkeypatch):
         mock_emb.assert_called_once_with(model="text-embedding-3-small")
 
     assert (chroma_base / "file-123").exists()
+
+
+from langchain_core.runnables import Runnable, RunnableLambda
+
+from src.rag_service import get_rag_chain
+
+
+def test_get_rag_chain_returns_runnable(tmp_path, monkeypatch):
+    import src.rag_service as rag_module
+
+    chroma_base = tmp_path / "chroma"
+    monkeypatch.setattr(rag_module, "CHROMA_DIR", chroma_base)
+
+    # Simulate an already-indexed collection by creating the directory
+    (chroma_base / "file-456").mkdir(parents=True)
+
+    fake_runnable = RunnableLambda(lambda x: x)
+
+    with patch("src.rag_service.OpenAIEmbeddings", return_value=FakeEmbeddings()):
+        with patch("src.rag_service.Chroma"):
+            with patch("src.rag_service.ChatAnthropic"):
+                with patch("src.rag_service.create_retrieval_chain", return_value=fake_runnable):
+                    chain = get_rag_chain("file-456")
+
+    assert isinstance(chain, Runnable)
+
+
+def test_get_rag_chain_raises_for_unknown_file(tmp_path, monkeypatch):
+    import src.rag_service as rag_module
+
+    monkeypatch.setattr(rag_module, "CHROMA_DIR", tmp_path / "chroma")
+
+    with pytest.raises(ValueError, match="No index found"):
+        get_rag_chain("nonexistent-file-id")
