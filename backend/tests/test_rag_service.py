@@ -1,12 +1,12 @@
 import pytest
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 
 from langchain_core.documents import Document
 from langchain_core.embeddings import Embeddings
 from langchain_core.runnables import Runnable, RunnableLambda
 
-from src.rag_service import index_pdf, get_rag_chain
+from src.rag_service import index_pdf, get_rag_chain, get_retriever
 
 
 class FakeEmbeddings(Embeddings):
@@ -67,3 +67,31 @@ def test_get_rag_chain_raises_for_unknown_file(tmp_path, monkeypatch):
 
     with pytest.raises(ValueError, match="No index found"):
         get_rag_chain("nonexistent-file-id")
+
+
+def test_get_retriever_returns_retriever(tmp_path, monkeypatch):
+    import src.rag_service as rag_module
+
+    chroma_base = tmp_path / "chroma"
+    monkeypatch.setattr(rag_module, "CHROMA_DIR", chroma_base)
+    (chroma_base / "file-789").mkdir(parents=True)
+
+    mock_vectorstore = MagicMock()
+    mock_retriever = MagicMock()
+    mock_vectorstore.as_retriever.return_value = mock_retriever
+
+    with patch("src.rag_service.OpenAIEmbeddings", return_value=FakeEmbeddings()):
+        with patch("src.rag_service.Chroma", return_value=mock_vectorstore):
+            result = get_retriever("file-789")
+
+    assert result is mock_retriever
+    mock_vectorstore.as_retriever.assert_called_once_with(search_kwargs={"k": 4})
+
+
+def test_get_retriever_raises_for_unknown_file(tmp_path, monkeypatch):
+    import src.rag_service as rag_module
+
+    monkeypatch.setattr(rag_module, "CHROMA_DIR", tmp_path / "chroma")
+
+    with pytest.raises(ValueError, match="No index found"):
+        get_retriever("nonexistent-file-id")
