@@ -1,4 +1,5 @@
 import json
+import logging
 import re
 
 from langchain_anthropic import ChatAnthropic
@@ -34,11 +35,13 @@ async def evaluate_message(message: str, chat_history: list[BaseMessage]) -> dic
         "chat_history": chat_history,
         "input": message,
     })
+    logging.warning("EVALUATOR raw content type=%s repr=%r", type(result.content).__name__, repr(result.content)[:500])
     raw = result.content if isinstance(result.content, str) else ""
     # LLMs often wrap JSON in markdown fences despite instructions — extract the object
     match = re.search(r'\{.*\}', raw, re.DOTALL)
     if match:
         raw = match.group()
+    logging.warning("EVALUATOR extracted raw=%r", raw[:200])
     try:
         parsed = json.loads(raw)
         thinking_quality = parsed.get("thinking_quality", "")
