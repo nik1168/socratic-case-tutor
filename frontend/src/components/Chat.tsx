@@ -6,6 +6,8 @@ interface Message {
   content: string
   isError?: boolean
   responseType?: ResponseType
+  thinkingQuality?: string
+  feedback?: string
 }
 
 interface Props {
@@ -27,8 +29,15 @@ export default function Chat({ fileId, fileName }: Props) {
     setInput('')
     setLoading(true)
     try {
-      const { response: reply, responseType } = await sendMessage(fileId, trimmed, history)
-      setMessages((prev) => [...prev, { role: 'assistant', content: reply, responseType }])
+      const { response: reply, responseType, thinkingQuality, feedback } = await sendMessage(fileId, trimmed, history)
+      setMessages((prev) => {
+        const updated = [...prev]
+        const lastUserIdx = updated.map((m) => m.role).lastIndexOf('user')
+        if (lastUserIdx !== -1) {
+          updated[lastUserIdx] = { ...updated[lastUserIdx], thinkingQuality, feedback }
+        }
+        return [...updated, { role: 'assistant', content: reply, responseType }]
+      })
     } catch {
       setMessages((prev) => [
         ...prev,
@@ -51,18 +60,34 @@ export default function Chat({ fileId, fileName }: Props) {
           </p>
         )}
         {messages.map((msg, i) => (
-          <div
-            key={i}
-            className={`max-w-2xl px-4 py-3 rounded-lg text-sm whitespace-pre-wrap ${
-              msg.role === 'user'
-                ? 'ml-auto bg-blue-600 text-white'
-                : 'mr-auto bg-white border text-gray-800'
-            }`}
-          >
-            {msg.role === 'assistant' && msg.responseType === 'clarification' && (
-              <p className="text-xs text-blue-500 mb-1 font-medium">Clarifying question</p>
+          <div key={i} className={msg.role === 'user' ? 'flex flex-col items-end' : ''}>
+            <div
+              className={`max-w-2xl px-4 py-3 rounded-lg text-sm whitespace-pre-wrap ${
+                msg.role === 'user'
+                  ? 'bg-blue-600 text-white'
+                  : 'mr-auto bg-white border text-gray-800'
+              }`}
+            >
+              {msg.role === 'assistant' && msg.responseType === 'clarification' && (
+                <p className="text-xs text-blue-500 mb-1 font-medium">Clarifying question</p>
+              )}
+              {msg.content}
+            </div>
+            {msg.role === 'user' && msg.thinkingQuality && msg.feedback && (
+              <div
+                className={`mt-1 text-xs rounded px-2 py-1 ${
+                  msg.thinkingQuality === 'insightful'
+                    ? 'bg-green-50 text-green-700'
+                    : msg.thinkingQuality === 'shallow'
+                    ? 'bg-red-50 text-red-700'
+                    : 'bg-amber-50 text-amber-700'
+                }`}
+              >
+                <span className="font-medium capitalize">{msg.thinkingQuality}</span>
+                <span>{' — '}</span>
+                <span>{msg.feedback}</span>
+              </div>
             )}
-            {msg.content}
           </div>
         ))}
         {loading && (

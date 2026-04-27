@@ -13,6 +13,10 @@ def test_chat_returns_response(client, fake_pdf_bytes):
         "src.main.run_agent",
         new_callable=AsyncMock,
         return_value={"answer": "What aspects of this case interest you most?", "response_type": "socratic_response"},
+    ), patch(
+        "src.main.evaluate_message",
+        new_callable=AsyncMock,
+        return_value={"thinking_quality": "developing", "feedback": "Keep exploring the financials."},
     ):
         response = client.post(
             "/chat",
@@ -20,8 +24,11 @@ def test_chat_returns_response(client, fake_pdf_bytes):
         )
 
     assert response.status_code == 200
-    assert response.json()["response"] == "What aspects of this case interest you most?"
-    assert response.json()["response_type"] == "socratic_response"
+    data = response.json()
+    assert data["response"] == "What aspects of this case interest you most?"
+    assert data["response_type"] == "socratic_response"
+    assert data["thinking_quality"] == "developing"
+    assert data["feedback"] == "Keep exploring the financials."
 
 
 def test_chat_returns_404_for_unknown_file_id(client):
@@ -45,7 +52,11 @@ def test_chat_passes_conversation_history_to_agent(client, fake_pdf_bytes):
         "src.main.run_agent",
         new_callable=AsyncMock,
         return_value={"answer": "Sure.", "response_type": "socratic_response"},
-    ) as mock_run:
+    ) as mock_run, patch(
+        "src.main.evaluate_message",
+        new_callable=AsyncMock,
+        return_value={"thinking_quality": "developing", "feedback": ""},
+    ) as mock_eval:
         client.post(
             "/chat",
             json={
@@ -67,6 +78,12 @@ def test_chat_passes_conversation_history_to_agent(client, fake_pdf_bytes):
     assert isinstance(chat_history[1], AIMessage)
     assert chat_history[1].content == "First answer"
 
+    eval_message_arg, eval_history_arg = mock_eval.call_args[0]
+    assert eval_message_arg == "Follow-up"
+    assert len(eval_history_arg) == 2
+    assert eval_history_arg[0].content == "First question"
+    assert eval_history_arg[1].content == "First answer"
+
 
 def test_chat_returns_404_when_chroma_index_missing(client, fake_pdf_bytes, tmp_path, monkeypatch):
     import src.main as main_module
@@ -77,7 +94,6 @@ def test_chat_returns_404_when_chroma_index_missing(client, fake_pdf_bytes, tmp_
     )
     file_id = upload_response.json()["file_id"]
 
-    # Chroma dir points somewhere with no index for this file_id
     monkeypatch.setattr(main_module, "CHROMA_DIR", tmp_path / "empty_chroma")
 
     response = client.post(

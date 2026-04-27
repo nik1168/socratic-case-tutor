@@ -1,3 +1,4 @@
+import asyncio
 import os
 import uuid
 from pathlib import Path
@@ -11,6 +12,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from langchain_core.messages import AIMessage, HumanMessage
 
 from src.agent import run_agent
+from src.evaluator import evaluate_message
 from src.models import ChatRequest, ChatResponse, UploadResponse
 from src.rag_service import CHROMA_DIR, index_pdf
 
@@ -55,17 +57,25 @@ async def chat(request: ChatRequest):
     chroma_path = CHROMA_DIR / request.file_id
     if not chroma_path.exists():
         raise HTTPException(status_code=404, detail="File not found. Please upload the PDF again.")
-    result = await run_agent(
-        request.file_id,
-        request.message,
-        [
-            HumanMessage(content=m.content) if m.role == "user"
-            else AIMessage(content=m.content)
-            for m in request.conversation_history
-        ],
+    history = [
+        HumanMessage(content=m.content) if m.role == "user"
+        else AIMessage(content=m.content)
+        for m in request.conversation_history
+    ]
+    agent_result, eval_result = await asyncio.gather(
+        run_agent(request.file_id, request.message, history),
+        evaluate_message(request.message, history),
+        return_exceptions=True,
     )
-    answer = result.get("answer")
-    response_type = result.get("response_type")
+    if isinstance(eval_result, Exception):
+        eval_result = {}
+    answer = agent_result.get("answer")
+    response_type = agent_result.get("response_type")
     if not answer or not response_type:
         raise HTTPException(status_code=502, detail="The AI agent returned an unexpected response.")
-    return ChatResponse(response=answer, response_type=response_type)
+    return ChatResponse(
+        response=answer,
+        response_type=response_type,
+        thinking_quality=eval_result.get("thinking_quality", "developing"),
+        feedback=eval_result.get("feedback", ""),
+    )

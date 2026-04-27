@@ -20,6 +20,8 @@ describe('Chat', () => {
     vi.mocked(api.sendMessage).mockResolvedValue({
       response: 'What do you think drove their growth?',
       responseType: 'socratic_response',
+      thinkingQuality: 'developing',
+      feedback: 'Try connecting this to the competitive landscape.',
     })
     render(<Chat fileId="file-1" fileName="case.pdf" />)
     await userEvent.type(screen.getByRole('textbox'), 'Tell me about Airbnb')
@@ -33,6 +35,8 @@ describe('Chat', () => {
     vi.mocked(api.sendMessage).mockResolvedValue({
       response: 'Are you asking about the financial side or the operational side?',
       responseType: 'clarification',
+      thinkingQuality: 'developing',
+      feedback: 'Good start.',
     })
     render(<Chat fileId="file-1" fileName="case.pdf" />)
     await userEvent.type(screen.getByRole('textbox'), 'Why did it fail?')
@@ -55,7 +59,12 @@ describe('Chat', () => {
   it('filters error messages from conversation history before sending', async () => {
     vi.mocked(api.sendMessage)
       .mockRejectedValueOnce(new Error('fail'))
-      .mockResolvedValueOnce({ response: 'Good question.', responseType: 'socratic_response' })
+      .mockResolvedValueOnce({
+        response: 'Good question.',
+        responseType: 'socratic_response',
+        thinkingQuality: 'developing',
+        feedback: '',
+      })
 
     render(<Chat fileId="file-1" fileName="case.pdf" />)
 
@@ -73,5 +82,37 @@ describe('Chat', () => {
     const history = secondCall[2]!
     expect(history).toHaveLength(1)
     expect(history[0].content).toBe('First question')
+  })
+
+  it('shows thinking quality badge on user message after response', async () => {
+    vi.mocked(api.sendMessage).mockResolvedValue({
+      response: 'Good question.',
+      responseType: 'socratic_response',
+      thinkingQuality: 'insightful',
+      feedback: 'Great connection to the competitive landscape.',
+    })
+    render(<Chat fileId="file-1" fileName="case.pdf" />)
+    await userEvent.type(screen.getByRole('textbox'), 'What drove their growth?')
+    await userEvent.click(screen.getByRole('button', { name: /send/i }))
+    await waitFor(() =>
+      expect(screen.getByText(/insightful/i)).toBeInTheDocument()
+    )
+    expect(screen.getByText('Great connection to the competitive landscape.')).toBeInTheDocument()
+  })
+
+  it('shows red badge for shallow thinking quality', async () => {
+    vi.mocked(api.sendMessage).mockResolvedValue({
+      response: 'Can you clarify what you mean?',
+      responseType: 'clarification',
+      thinkingQuality: 'shallow',
+      feedback: 'Try going deeper than describing what happened.',
+    })
+    render(<Chat fileId="file-1" fileName="case.pdf" />)
+    await userEvent.type(screen.getByRole('textbox'), 'What is Airbnb?')
+    await userEvent.click(screen.getByRole('button', { name: /send/i }))
+    await waitFor(() =>
+      expect(screen.getByText(/shallow/i)).toBeInTheDocument()
+    )
+    expect(screen.getByText('Try going deeper than describing what happened.')).toBeInTheDocument()
   })
 })

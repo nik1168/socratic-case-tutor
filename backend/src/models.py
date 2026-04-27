@@ -21,3 +21,5 @@ class ChatRequest(BaseModel):
 class ChatResponse(BaseModel):
     response: str
     response_type: Literal["clarification", "socratic_response"]
+    thinking_quality: Literal["shallow", "developing", "insightful"]
+    feedback: str
