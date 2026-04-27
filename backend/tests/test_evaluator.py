@@ -1,8 +1,20 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from langchain_core.messages import AIMessage, HumanMessage
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 
-from src.evaluator import evaluate_message
+from src.evaluator import EVALUATE_PROMPT, evaluate_message
+
+
+def test_evaluate_prompt_has_no_spurious_template_variables():
+    # Curly braces in the JSON example must be escaped with {{ }} so LangChain
+    # does not treat them as template variables and raise KeyError on invoke.
+    prompt = ChatPromptTemplate.from_messages([
+        ("system", EVALUATE_PROMPT),
+        MessagesPlaceholder("chat_history"),
+        ("human", "{input}"),
+    ])
+    assert set(prompt.input_variables) == {"chat_history", "input"}
 
 
 async def test_evaluate_message_returns_insightful():
