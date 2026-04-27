@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import ReactMarkdown from 'react-markdown'
 import { sendMessage, type ResponseType } from '../api'
 
 interface Message {
@@ -62,16 +63,31 @@ export default function Chat({ fileId, fileName }: Props) {
         {messages.map((msg, i) => (
           <div key={i} className={msg.role === 'user' ? 'flex flex-col items-end' : ''}>
             <div
-              className={`max-w-2xl px-4 py-3 rounded-lg text-sm whitespace-pre-wrap ${
+              className={`max-w-2xl px-4 py-3 rounded-lg text-sm ${
                 msg.role === 'user'
-                  ? 'bg-blue-600 text-white'
+                  ? 'bg-blue-600 text-white whitespace-pre-wrap'
                   : 'mr-auto bg-white border text-gray-800'
               }`}
             >
               {msg.role === 'assistant' && msg.responseType === 'clarification' && (
                 <p className="text-xs text-blue-500 mb-1 font-medium">Clarifying question</p>
               )}
-              {msg.content}
+              {msg.role === 'assistant' ? (
+                <ReactMarkdown
+                  components={{
+                    p: ({ children }) => <p className="mb-1 last:mb-0">{children}</p>,
+                    strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
+                    em: ({ children }) => <em className="italic">{children}</em>,
+                    ul: ({ children }) => <ul className="list-disc list-inside mb-1">{children}</ul>,
+                    ol: ({ children }) => <ol className="list-decimal list-inside mb-1">{children}</ol>,
+                    li: ({ children }) => <li className="ml-2">{children}</li>,
+                  }}
+                >
+                  {msg.content}
+                </ReactMarkdown>
+              ) : (
+                msg.content
+              )}
             </div>
             {msg.role === 'user' && msg.thinkingQuality && msg.feedback && (
               <div
