@@ -56,7 +56,7 @@ def test_chat_passes_conversation_history_to_agent(client, fake_pdf_bytes):
         "src.main.evaluate_message",
         new_callable=AsyncMock,
         return_value={"thinking_quality": "developing", "feedback": ""},
-    ):
+    ) as mock_eval:
         client.post(
             "/chat",
             json={
@@ -77,6 +77,12 @@ def test_chat_passes_conversation_history_to_agent(client, fake_pdf_bytes):
     assert chat_history[0].content == "First question"
     assert isinstance(chat_history[1], AIMessage)
     assert chat_history[1].content == "First answer"
+
+    eval_message_arg, eval_history_arg = mock_eval.call_args[0]
+    assert eval_message_arg == "Follow-up"
+    assert len(eval_history_arg) == 2
+    assert eval_history_arg[0].content == "First question"
+    assert eval_history_arg[1].content == "First answer"
 
 
 def test_chat_returns_404_when_chroma_index_missing(client, fake_pdf_bytes, tmp_path, monkeypatch):

@@ -65,7 +65,10 @@ async def chat(request: ChatRequest):
     agent_result, eval_result = await asyncio.gather(
         run_agent(request.file_id, request.message, history),
         evaluate_message(request.message, history),
+        return_exceptions=True,
     )
+    if isinstance(eval_result, Exception):
+        eval_result = {}
     answer = agent_result.get("answer")
     response_type = agent_result.get("response_type")
     if not answer or not response_type:
