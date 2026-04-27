@@ -25,15 +25,52 @@ def test_chat_request_defaults_conversation_history_to_empty():
 
 
 def test_chat_response_includes_response_type():
-    r = ChatResponse(response="hello", response_type="socratic_response")
+    r = ChatResponse(
+        response="hello",
+        response_type="socratic_response",
+        thinking_quality="developing",
+        feedback="Keep exploring.",
+    )
     assert r.response_type == "socratic_response"
     assert r.model_dump()["response_type"] == "socratic_response"
 
-    c = ChatResponse(response="hello", response_type="clarification")
+    c = ChatResponse(
+        response="hello",
+        response_type="clarification",
+        thinking_quality="shallow",
+        feedback="Try to go deeper.",
+    )
     assert c.response_type == "clarification"
     assert c.model_dump()["response_type"] == "clarification"
 
 
 def test_chat_response_rejects_invalid_response_type():
     with pytest.raises(ValidationError):
-        ChatResponse(response="hello", response_type="invalid")
+        ChatResponse(
+            response="hello",
+            response_type="invalid",
+            thinking_quality="developing",
+            feedback="test",
+        )
+
+
+def test_chat_response_includes_thinking_quality_and_feedback():
+    r = ChatResponse(
+        response="hello",
+        response_type="socratic_response",
+        thinking_quality="insightful",
+        feedback="Great connection.",
+    )
+    assert r.thinking_quality == "insightful"
+    assert r.feedback == "Great connection."
+    assert r.model_dump()["thinking_quality"] == "insightful"
+
+
+def test_chat_response_rejects_invalid_thinking_quality():
+    with pytest.raises(ValidationError):
+        ChatResponse(
+            response="hello",
+            response_type="socratic_response",
+            thinking_quality="excellent",
+            feedback="test",
+        )
