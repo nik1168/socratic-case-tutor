@@ -73,7 +73,7 @@ export default function Chat({ fileId, fileName }: Props) {
               )}
               {msg.content}
             </div>
-            {msg.role === 'user' && msg.thinkingQuality && msg.feedback && (
+            {msg.role === 'user' && msg.thinkingQuality && (
               <div
                 className={`mt-1 text-xs rounded px-2 py-1 ${
                   msg.thinkingQuality === 'insightful'
@@ -84,8 +84,12 @@ export default function Chat({ fileId, fileName }: Props) {
                 }`}
               >
                 <span className="font-medium capitalize">{msg.thinkingQuality}</span>
-                <span>{' — '}</span>
-                <span>{msg.feedback}</span>
+                {msg.feedback && (
+                  <>
+                    <span>{' — '}</span>
+                    <span>{msg.feedback}</span>
+                  </>
+                )}
               </div>
             )}
           </div>

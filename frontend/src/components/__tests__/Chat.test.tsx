@@ -115,4 +115,20 @@ describe('Chat', () => {
     )
     expect(screen.getByText('Try going deeper than describing what happened.')).toBeInTheDocument()
   })
+
+  it('shows badge without feedback text when feedback is empty', async () => {
+    vi.mocked(api.sendMessage).mockResolvedValue({
+      response: 'Good question.',
+      responseType: 'socratic_response',
+      thinkingQuality: 'developing',
+      feedback: '',
+    })
+    render(<Chat fileId="file-1" fileName="case.pdf" />)
+    await userEvent.type(screen.getByRole('textbox'), 'Tell me about the case')
+    await userEvent.click(screen.getByRole('button', { name: /send/i }))
+    await waitFor(() =>
+      expect(screen.getByText(/developing/i)).toBeInTheDocument()
+    )
+    expect(screen.queryByText(' — ')).not.toBeInTheDocument()
+  })
 })

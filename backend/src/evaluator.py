@@ -1,4 +1,5 @@
 import json
+import re
 
 from langchain_anthropic import ChatAnthropic
 from langchain_core.messages import BaseMessage
@@ -34,6 +35,10 @@ async def evaluate_message(message: str, chat_history: list[BaseMessage]) -> dic
         "input": message,
     })
     raw = result.content if isinstance(result.content, str) else ""
+    # LLMs often wrap JSON in markdown fences despite instructions — extract the object
+    match = re.search(r'\{.*\}', raw, re.DOTALL)
+    if match:
+        raw = match.group()
     try:
         parsed = json.loads(raw)
         thinking_quality = parsed.get("thinking_quality", "")
