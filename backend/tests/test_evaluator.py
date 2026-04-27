@@ -62,3 +62,16 @@ async def test_evaluate_message_falls_back_on_invalid_json():
 
     assert result["thinking_quality"] == "developing"
     assert result["feedback"] == ""
+
+
+async def test_evaluate_message_handles_markdown_wrapped_json():
+    mock_result = MagicMock()
+    mock_result.content = '```json\n{"thinking_quality": "developing", "feedback": "Keep exploring the implications."}\n```'
+    mock_chain = MagicMock()
+    mock_chain.ainvoke = AsyncMock(return_value=mock_result)
+
+    with patch("src.evaluator._build_chain", return_value=mock_chain):
+        result = await evaluate_message("Some question", [])
+
+    assert result["thinking_quality"] == "developing"
+    assert result["feedback"] == "Keep exploring the implications."
