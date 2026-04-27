@@ -23,7 +23,7 @@ export async function sendMessage(
   fileId: string,
   message: string,
   conversationHistory: Array<{ role: 'user' | 'assistant'; content: string }> = []
-): Promise<{ response: string; responseType: ResponseType }> {
+): Promise<{ response: string; responseType: ResponseType; thinkingQuality: string; feedback: string }> {
   const res = await fetch(`${API_URL}/chat`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -37,7 +37,9 @@ export async function sendMessage(
   const data = await res.json()
   const response = data?.response
   const responseType = data?.response_type
+  const thinkingQuality = data?.thinking_quality ?? ''
+  const feedback = data?.feedback ?? ''
   if (typeof response !== 'string') throw new Error('Unexpected response: missing response')
   if (!isResponseType(responseType)) throw new Error('Unexpected response: invalid response_type')
-  return { response, responseType }
+  return { response, responseType, thinkingQuality: String(thinkingQuality), feedback: String(feedback) }
 }
