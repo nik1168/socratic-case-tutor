@@ -31,11 +31,16 @@ def _build_chain():
 
 async def evaluate_message(message: str, chat_history: list[BaseMessage]) -> dict:
     chain = _build_chain()
-    result = await chain.ainvoke({
-        "chat_history": chat_history,
-        "input": message,
-    })
-    logging.warning("EVALUATOR raw content type=%s repr=%r", type(result.content).__name__, repr(result.content)[:500])
+    logging.warning("EVALUATOR invoking chain")
+    try:
+        result = await chain.ainvoke({
+            "chat_history": chat_history,
+            "input": message,
+        })
+    except Exception as exc:
+        logging.warning("EVALUATOR ainvoke failed: %r", exc)
+        return {"thinking_quality": "developing", "feedback": ""}
+    logging.warning("EVALUATOR content type=%s repr=%r", type(result.content).__name__, repr(result.content)[:500])
     raw = result.content if isinstance(result.content, str) else ""
     # LLMs often wrap JSON in markdown fences despite instructions — extract the object
     match = re.search(r'\{.*\}', raw, re.DOTALL)
