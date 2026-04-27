@@ -43,10 +43,12 @@ async def test_evaluate_message_passes_chat_history():
     mock_chain.ainvoke = capture_invoke
 
     with patch("src.evaluator._build_chain", return_value=mock_chain):
-        await evaluate_message("Follow-up question", history)
+        result = await evaluate_message("Follow-up question", history)
 
     assert captured["inputs"]["chat_history"] == history
     assert captured["inputs"]["input"] == "Follow-up question"
+    assert result["thinking_quality"] == "developing"
+    assert result["feedback"] == "Keep exploring."
 
 
 async def test_evaluate_message_falls_back_on_invalid_json():
