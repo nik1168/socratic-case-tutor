@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import { sendMessage, getMessages, type ResponseType } from '../api'
 
@@ -16,10 +16,20 @@ interface Props {
   sessionId: string
 }
 
+const mono = "'JetBrains Mono', monospace";
+const serif = "'Playfair Display', Georgia, serif";
+
+const qualityConfig: Record<string, { border: string; bg: string; text: string }> = {
+  insightful: { border: '#4ade80', bg: 'rgba(74,222,128,0.04)', text: '#4ade80' },
+  developing: { border: '#fbbf24', bg: 'rgba(251,191,36,0.04)', text: '#fbbf24' },
+  shallow:    { border: '#f87171', bg: 'rgba(248,113,113,0.04)', text: '#f87171' },
+}
+
 export default function Chat({ fileId, sessionId }: Props) {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
+  const bottomRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     getMessages(sessionId, fileId)
@@ -51,11 +61,14 @@ export default function Chat({ fileId, sessionId }: Props) {
       .catch(console.error)
   }, [sessionId, fileId])
 
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView?.({ behavior: 'smooth' })
+  }, [messages, loading])
+
   async function handleSend() {
     const trimmed = input.trim()
     if (!trimmed || loading) return
-    const userMessage: Message = { role: 'user', content: trimmed }
-    setMessages((prev) => [...prev, userMessage])
+    setMessages((prev) => [...prev, { role: 'user', content: trimmed }])
     setInput('')
     setLoading(true)
     try {
@@ -79,80 +92,156 @@ export default function Chat({ fileId, sessionId }: Props) {
   }
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="flex-1 overflow-y-auto p-4 space-y-3">
+    <div className="flex-1 flex flex-col min-h-0">
+      {/* Messages */}
+      <div className="flex-1 overflow-y-auto px-8 py-10 space-y-8">
         {messages.length === 0 && (
-          <p className="text-gray-400 text-sm text-center mt-8">
-            Ask your first question about the case
-          </p>
+          <div className="flex items-center justify-center h-full">
+            <p style={{ fontFamily: serif, color: '#252220', fontStyle: 'italic' }} className="text-xl">
+              Ask your first question about the case
+            </p>
+          </div>
         )}
+
         {messages.map((msg, i) => (
-          <div key={i} className={msg.role === 'user' ? 'flex flex-col items-end' : ''}>
+          <div key={i} className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
+            {/* Role label */}
+            <span
+              style={{ fontFamily: mono, color: '#2a2520', fontSize: '10px', letterSpacing: '0.1em' }}
+              className="uppercase mb-2 px-1"
+            >
+              {msg.role === 'user' ? 'You' : 'Tutor'}
+            </span>
+
+            {/* Message bubble */}
             <div
-              className={`max-w-2xl px-4 py-3 rounded-lg text-sm ${
+              className="max-w-[580px] px-5 py-4 rounded-xl text-sm leading-relaxed"
+              style={
                 msg.role === 'user'
-                  ? 'bg-blue-600 text-white whitespace-pre-wrap'
-                  : 'mr-auto bg-white border text-gray-800'
-              }`}
+                  ? { background: '#161616', border: '1px solid #242424', color: '#ddd6cc' }
+                  : msg.isError
+                  ? { background: '#180e0e', border: '1px solid #3a1515', color: '#c05252' }
+                  : { background: '#101010', border: '1px solid #1a1a1a', color: '#a09888' }
+              }
             >
               {msg.role === 'assistant' && msg.responseType === 'clarification' && (
-                <p className="text-xs text-blue-500 mb-1 font-medium">Clarifying question</p>
+                <p
+                  style={{ fontFamily: mono, color: '#c9a84c', fontSize: '10px', letterSpacing: '0.1em' }}
+                  className="uppercase mb-3"
+                >
+                  Clarifying question
+                </p>
               )}
               {msg.role === 'assistant' ? (
                 <ReactMarkdown
                   components={{
-                    p: ({ children }) => <p className="mb-1 last:mb-0">{children}</p>,
-                    strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
+                    p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+                    strong: ({ children }) => <strong style={{ color: '#c8c0b8', fontWeight: 600 }}>{children}</strong>,
                     em: ({ children }) => <em className="italic">{children}</em>,
-                    ul: ({ children }) => <ul className="list-disc list-inside mb-1">{children}</ul>,
-                    ol: ({ children }) => <ol className="list-decimal list-inside mb-1">{children}</ol>,
+                    ul: ({ children }) => <ul className="list-disc list-inside mb-2 space-y-1">{children}</ul>,
+                    ol: ({ children }) => <ol className="list-decimal list-inside mb-2 space-y-1">{children}</ol>,
                     li: ({ children }) => <li className="ml-2">{children}</li>,
                   }}
                 >
                   {msg.content}
                 </ReactMarkdown>
               ) : (
-                msg.content
+                <span className="whitespace-pre-wrap">{msg.content}</span>
               )}
             </div>
-            {msg.role === 'user' && msg.thinkingQuality && (
-              <div
-                className={`mt-1 text-xs rounded px-2 py-1 ${
-                  msg.thinkingQuality === 'insightful'
-                    ? 'bg-green-50 text-green-700'
-                    : msg.thinkingQuality === 'shallow'
-                    ? 'bg-red-50 text-red-700'
-                    : 'bg-amber-50 text-amber-700'
-                }`}
-              >
-                <span className="font-medium capitalize">{msg.thinkingQuality}</span>
-                {msg.feedback && (
-                  <>
-                    <span>{' — '}</span>
-                    <span>{msg.feedback}</span>
-                  </>
-                )}
-              </div>
-            )}
+
+            {/* Evaluator badge */}
+            {msg.role === 'user' && msg.thinkingQuality && (() => {
+              const q = qualityConfig[msg.thinkingQuality] ?? qualityConfig.developing;
+              return (
+                <div
+                  className="mt-2 px-3 py-2 rounded max-w-[580px]"
+                  style={{
+                    borderLeft: `2px solid ${q.border}`,
+                    background: q.bg,
+                    color: q.text,
+                  }}
+                >
+                  <span style={{ fontFamily: mono, fontSize: '10px', letterSpacing: '0.1em' }} className="uppercase font-medium">
+                    {msg.thinkingQuality}
+                  </span>
+                  {msg.feedback && (
+                    <span
+                      style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '12px', color: q.text, opacity: 0.75 }}
+                      className="ml-3"
+                    >
+                      {msg.feedback}
+                    </span>
+                  )}
+                </div>
+              );
+            })()}
           </div>
         ))}
+
+        {/* Loading */}
         {loading && (
-          <div className="mr-auto bg-white border rounded-lg px-4 py-3 text-sm text-gray-400">
-            Thinking…
+          <div className="flex flex-col items-start">
+            <span
+              style={{ fontFamily: mono, color: '#2a2520', fontSize: '10px', letterSpacing: '0.1em' }}
+              className="uppercase mb-2 px-1"
+            >
+              Tutor
+            </span>
+            <div
+              className="px-5 py-4 rounded-xl"
+              style={{ background: '#101010', border: '1px solid #1a1a1a' }}
+            >
+              <span style={{ fontFamily: serif, color: '#2e2820', fontStyle: 'italic' }} className="text-sm">
+                Thinking
+              </span>
+              <span style={{ color: '#2e2820' }} className="animate-pulse text-sm">…</span>
+            </div>
           </div>
         )}
+
+        <div ref={bottomRef} />
       </div>
-      <div className="p-4 border-t flex gap-2">
+
+      {/* Input bar */}
+      <div
+        className="shrink-0 px-8 py-5 flex gap-3"
+        style={{ borderTop: '1px solid #141414' }}
+      >
         <input
-          className="flex-1 border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="flex-1 rounded-xl px-4 py-3 text-sm transition-colors"
+          style={{
+            background: '#111111',
+            border: '1px solid #1e1e1e',
+            color: '#ddd6cc',
+            outline: 'none',
+          }}
           placeholder="Ask about the case…"
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+          onFocus={(e) => { e.currentTarget.style.borderColor = '#2a2a2a' }}
+          onBlur={(e) => { e.currentTarget.style.borderColor = '#1e1e1e' }}
           disabled={loading}
         />
         <button
-          className="px-4 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 disabled:opacity-50"
+          className="px-5 py-3 rounded-xl text-sm transition-all"
+          style={{
+            background: '#141414',
+            border: '1px solid #1e1e1e',
+            color: '#5a5048',
+            fontFamily: mono,
+            fontSize: '12px',
+            letterSpacing: '0.04em',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.color = '#ddd6cc';
+            e.currentTarget.style.borderColor = '#2a2a2a';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.color = '#5a5048';
+            e.currentTarget.style.borderColor = '#1e1e1e';
+          }}
           onClick={handleSend}
           disabled={loading}
         >
