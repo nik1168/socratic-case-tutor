@@ -12,14 +12,14 @@ describe('FileUpload', () => {
   })
 
   it('renders the upload button', () => {
-    render(<FileUpload onUpload={vi.fn()} />)
+    render(<FileUpload sessionId="test-session" onUpload={vi.fn()} />)
     expect(screen.getByRole('button', { name: /choose pdf/i })).toBeInTheDocument()
   })
 
   it('calls onUpload with fileId and fileName on successful upload', async () => {
     vi.mocked(api.uploadPdf).mockResolvedValue('file-123')
     const onUpload = vi.fn()
-    const { container } = render(<FileUpload onUpload={onUpload} />)
+    const { container } = render(<FileUpload sessionId="test-session" onUpload={onUpload} />)
 
     const file = new File(['%PDF-1.4'], 'case.pdf', { type: 'application/pdf' })
     const input = container.querySelector('input[type="file"]') as HTMLInputElement
@@ -30,7 +30,7 @@ describe('FileUpload', () => {
 
   it('shows an error message on upload failure', async () => {
     vi.mocked(api.uploadPdf).mockRejectedValue(new Error('Server error'))
-    const { container } = render(<FileUpload onUpload={vi.fn()} />)
+    const { container } = render(<FileUpload sessionId="test-session" onUpload={vi.fn()} />)
 
     const file = new File(['%PDF-1.4'], 'case.pdf', { type: 'application/pdf' })
     const input = container.querySelector('input[type="file"]') as HTMLInputElement

@@ -2,10 +2,11 @@ import { useRef, useState } from 'react'
 import { uploadPdf } from '../api'
 
 interface Props {
+  sessionId: string
   onUpload: (fileId: string, fileName: string) => void
 }
 
-export default function FileUpload({ onUpload }: Props) {
+export default function FileUpload({ sessionId, onUpload }: Props) {
   const inputRef = useRef<HTMLInputElement>(null)
   const [status, setStatus] = useState<'idle' | 'uploading' | 'error'>('idle')
   const [error, setError] = useState('')
@@ -19,7 +20,7 @@ export default function FileUpload({ onUpload }: Props) {
     setStatus('uploading')
     setError('')
     try {
-      const fileId = await uploadPdf(file)
+      const fileId = await uploadPdf(file, sessionId)
       onUpload(fileId, file.name)
     } catch {
       setError('Upload failed. Check that the backend is running.')

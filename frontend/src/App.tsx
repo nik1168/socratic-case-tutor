@@ -14,6 +14,7 @@ export default function App() {
       <div className="max-w-3xl mx-auto mt-8 px-4">
         {!session ? (
           <FileUpload
+            sessionId=""
             onUpload={(fileId, fileName) => setSession({ fileId, fileName })}
           />
         ) : (
