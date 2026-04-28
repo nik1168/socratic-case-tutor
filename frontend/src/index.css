@@ -2,47 +2,47 @@
 
 /* ── Dark theme (default) ───────────────────────────────────────────────── */
 :root, [data-theme="dark"] {
-  --bg:              #0c0c0c;
-  --surface:         #111111;
-  --card:            #141414;
-  --border:          #1e1e1e;
-  --border-subtle:   #181818;
-  --border-hover:    #2a2a2a;
+  --bg:              #181818;
+  --surface:         #202020;
+  --card:            #262626;
+  --border:          #303030;
+  --border-subtle:   #282828;
+  --border-hover:    #404040;
 
-  --text:            #ddd6cc;
-  --text-secondary:  #9b9080;
-  --text-muted:      #5a5048;
-  --text-dim:        #383028;
-  --text-faint:      #252220;
+  --text:            #e8e2d8;
+  --text-secondary:  #a89e90;
+  --text-muted:      #706860;
+  --text-dim:        #504840;
+  --text-faint:      #403830;
 
   --gold:            #c9a84c;
   --gold-border:     rgba(201, 168, 76, 0.35);
   --gold-border-h:   rgba(201, 168, 76, 0.60);
-  --gold-bg-h:       rgba(201, 168, 76, 0.06);
-  --gold-card-h:     rgba(201, 168, 76, 0.20);
+  --gold-bg-h:       rgba(201, 168, 76, 0.07);
+  --gold-card-h:     rgba(201, 168, 76, 0.22);
 
-  --user-bg:         #161616;
-  --user-border:     #242424;
-  --user-text:       #ddd6cc;
-  --tutor-bg:        #101010;
-  --tutor-border:    #1a1a1a;
-  --tutor-text:      #a09888;
-  --error-bg:        #180e0e;
-  --error-border:    #3a1515;
-  --error-text:      #c05252;
+  --user-bg:         #2a2a2a;
+  --user-border:     #363636;
+  --user-text:       #e8e2d8;
+  --tutor-bg:        #202020;
+  --tutor-border:    #2e2e2e;
+  --tutor-text:      #a89e90;
+  --error-bg:        #2a1a1a;
+  --error-border:    #4a2020;
+  --error-text:      #e06060;
 
   --badge-i:         #4ade80;
-  --badge-i-bg:      rgba(74, 222, 128, 0.04);
+  --badge-i-bg:      rgba(74, 222, 128, 0.07);
   --badge-d:         #fbbf24;
-  --badge-d-bg:      rgba(251, 191, 36, 0.04);
+  --badge-d-bg:      rgba(251, 191, 36, 0.07);
   --badge-s:         #f87171;
-  --badge-s-bg:      rgba(248, 113, 113, 0.04);
+  --badge-s-bg:      rgba(248, 113, 113, 0.07);
 
-  --input-bg:        #111111;
-  --input-border:    #1e1e1e;
-  --upload-bg:       #111111;
-  --upload-icon:     #383028;
-  --upload-icon-b:   #202020;
+  --input-bg:        #202020;
+  --input-border:    #303030;
+  --upload-bg:       #202020;
+  --upload-icon:     #504840;
+  --upload-icon-b:   #383028;
 }
 
 /* ── Light theme ────────────────────────────────────────────────────────── */
