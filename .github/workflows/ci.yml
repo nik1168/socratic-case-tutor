@@ -13,6 +13,22 @@ jobs:
     defaults:
       run:
         working-directory: backend
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: case_tutor
+          POSTGRES_USER: case_tutor
+          POSTGRES_PASSWORD: case_tutor
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U case_tutor"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgresql://case_tutor:case_tutor@localhost:5432/case_tutor
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v4
