@@ -84,6 +84,8 @@ async def chat(request: ChatRequest):
         evaluate_message(request.message, history),
         return_exceptions=True,
     )
+    if isinstance(agent_result, Exception):
+        raise HTTPException(status_code=502, detail="The AI agent returned an unexpected response.")
     if isinstance(eval_result, Exception):
         eval_result = {}
 
