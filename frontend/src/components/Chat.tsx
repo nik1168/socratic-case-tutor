@@ -16,19 +16,19 @@ interface Props {
   sessionId: string
 }
 
-const mono = "'JetBrains Mono', monospace";
+const mono  = "'JetBrains Mono', monospace";
 const serif = "'Playfair Display', Georgia, serif";
 
-const qualityConfig: Record<string, { border: string; bg: string; text: string }> = {
-  insightful: { border: '#4ade80', bg: 'rgba(74,222,128,0.04)', text: '#4ade80' },
-  developing: { border: '#fbbf24', bg: 'rgba(251,191,36,0.04)', text: '#fbbf24' },
-  shallow:    { border: '#f87171', bg: 'rgba(248,113,113,0.04)', text: '#f87171' },
+const qualityVars: Record<string, { border: string; bg: string; text: string }> = {
+  insightful: { border: 'var(--badge-i)',    bg: 'var(--badge-i-bg)', text: 'var(--badge-i)' },
+  developing: { border: 'var(--badge-d)',    bg: 'var(--badge-d-bg)', text: 'var(--badge-d)' },
+  shallow:    { border: 'var(--badge-s)',    bg: 'var(--badge-s-bg)', text: 'var(--badge-s)' },
 }
 
 export default function Chat({ fileId, sessionId }: Props) {
   const [messages, setMessages] = useState<Message[]>([])
-  const [input, setInput] = useState('')
-  const [loading, setLoading] = useState(false)
+  const [input, setInput]       = useState('')
+  const [loading, setLoading]   = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -46,11 +46,7 @@ export default function Chat({ fileId, sessionId }: Props) {
           if (item.role === 'assistant' && (item.thinking_quality || item.feedback)) {
             for (let j = i - 1; j >= 0; j--) {
               if (loaded[j].role === 'user') {
-                loaded[j] = {
-                  ...loaded[j],
-                  thinkingQuality: item.thinking_quality ?? undefined,
-                  feedback: item.feedback ?? undefined,
-                }
+                loaded[j] = { ...loaded[j], thinkingQuality: item.thinking_quality ?? undefined, feedback: item.feedback ?? undefined }
                 break
               }
             }
@@ -76,16 +72,11 @@ export default function Chat({ fileId, sessionId }: Props) {
       setMessages((prev) => {
         const updated = [...prev]
         const lastUserIdx = updated.map((m) => m.role).lastIndexOf('user')
-        if (lastUserIdx !== -1) {
-          updated[lastUserIdx] = { ...updated[lastUserIdx], thinkingQuality, feedback }
-        }
+        if (lastUserIdx !== -1) updated[lastUserIdx] = { ...updated[lastUserIdx], thinkingQuality, feedback }
         return [...updated, { role: 'assistant', content: reply, responseType }]
       })
     } catch {
-      setMessages((prev) => [
-        ...prev,
-        { role: 'assistant', content: 'Error: could not reach the backend.', isError: true },
-      ])
+      setMessages((prev) => [...prev, { role: 'assistant', content: 'Error: could not reach the backend.', isError: true }])
     } finally {
       setLoading(false)
     }
@@ -97,7 +88,7 @@ export default function Chat({ fileId, sessionId }: Props) {
       <div className="flex-1 overflow-y-auto px-8 py-10 space-y-8">
         {messages.length === 0 && (
           <div className="flex items-center justify-center h-full">
-            <p style={{ fontFamily: serif, color: '#252220', fontStyle: 'italic' }} className="text-xl">
+            <p style={{ fontFamily: serif, color: 'var(--text-dim)', fontStyle: 'italic' }} className="text-xl">
               Ask your first question about the case
             </p>
           </div>
@@ -106,29 +97,23 @@ export default function Chat({ fileId, sessionId }: Props) {
         {messages.map((msg, i) => (
           <div key={i} className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
             {/* Role label */}
-            <span
-              style={{ fontFamily: mono, color: '#2a2520', fontSize: '10px', letterSpacing: '0.1em' }}
-              className="uppercase mb-2 px-1"
-            >
+            <span style={{ fontFamily: mono, color: 'var(--text-dim)', fontSize: '10px', letterSpacing: '0.1em' }} className="uppercase mb-2 px-1">
               {msg.role === 'user' ? 'You' : 'Tutor'}
             </span>
 
-            {/* Message bubble */}
+            {/* Bubble */}
             <div
               className="max-w-[580px] px-5 py-4 rounded-xl text-sm leading-relaxed"
               style={
                 msg.role === 'user'
-                  ? { background: '#161616', border: '1px solid #242424', color: '#ddd6cc' }
+                  ? { background: 'var(--user-bg)', border: '1px solid var(--user-border)', color: 'var(--user-text)' }
                   : msg.isError
-                  ? { background: '#180e0e', border: '1px solid #3a1515', color: '#c05252' }
-                  : { background: '#101010', border: '1px solid #1a1a1a', color: '#a09888' }
+                  ? { background: 'var(--error-bg)', border: '1px solid var(--error-border)', color: 'var(--error-text)' }
+                  : { background: 'var(--tutor-bg)', border: '1px solid var(--tutor-border)', color: 'var(--tutor-text)' }
               }
             >
               {msg.role === 'assistant' && msg.responseType === 'clarification' && (
-                <p
-                  style={{ fontFamily: mono, color: '#c9a84c', fontSize: '10px', letterSpacing: '0.1em' }}
-                  className="uppercase mb-3"
-                >
+                <p style={{ fontFamily: mono, color: 'var(--gold)', fontSize: '10px', letterSpacing: '0.1em' }} className="uppercase mb-3">
                   Clarifying question
                 </p>
               )}
@@ -136,7 +121,7 @@ export default function Chat({ fileId, sessionId }: Props) {
                 <ReactMarkdown
                   components={{
                     p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
-                    strong: ({ children }) => <strong style={{ color: '#c8c0b8', fontWeight: 600 }}>{children}</strong>,
+                    strong: ({ children }) => <strong style={{ color: 'var(--text)', fontWeight: 600 }}>{children}</strong>,
                     em: ({ children }) => <em className="italic">{children}</em>,
                     ul: ({ children }) => <ul className="list-disc list-inside mb-2 space-y-1">{children}</ul>,
                     ol: ({ children }) => <ol className="list-decimal list-inside mb-2 space-y-1">{children}</ol>,
@@ -152,24 +137,17 @@ export default function Chat({ fileId, sessionId }: Props) {
 
             {/* Evaluator badge */}
             {msg.role === 'user' && msg.thinkingQuality && (() => {
-              const q = qualityConfig[msg.thinkingQuality] ?? qualityConfig.developing;
+              const q = qualityVars[msg.thinkingQuality] ?? qualityVars.developing;
               return (
                 <div
                   className="mt-2 px-3 py-2 rounded max-w-[580px]"
-                  style={{
-                    borderLeft: `2px solid ${q.border}`,
-                    background: q.bg,
-                    color: q.text,
-                  }}
+                  style={{ borderLeft: `2px solid ${q.border}`, background: q.bg, color: q.text }}
                 >
                   <span style={{ fontFamily: mono, fontSize: '10px', letterSpacing: '0.1em' }} className="uppercase font-medium">
                     {msg.thinkingQuality}
                   </span>
                   {msg.feedback && (
-                    <span
-                      style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '12px', color: q.text, opacity: 0.75 }}
-                      className="ml-3"
-                    >
+                    <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '12px', opacity: 0.8 }} className="ml-3">
                       {msg.feedback}
                     </span>
                   )}
@@ -182,20 +160,12 @@ export default function Chat({ fileId, sessionId }: Props) {
         {/* Loading */}
         {loading && (
           <div className="flex flex-col items-start">
-            <span
-              style={{ fontFamily: mono, color: '#2a2520', fontSize: '10px', letterSpacing: '0.1em' }}
-              className="uppercase mb-2 px-1"
-            >
+            <span style={{ fontFamily: mono, color: 'var(--text-dim)', fontSize: '10px', letterSpacing: '0.1em' }} className="uppercase mb-2 px-1">
               Tutor
             </span>
-            <div
-              className="px-5 py-4 rounded-xl"
-              style={{ background: '#101010', border: '1px solid #1a1a1a' }}
-            >
-              <span style={{ fontFamily: serif, color: '#2e2820', fontStyle: 'italic' }} className="text-sm">
-                Thinking
-              </span>
-              <span style={{ color: '#2e2820' }} className="animate-pulse text-sm">…</span>
+            <div className="px-5 py-4 rounded-xl" style={{ background: 'var(--tutor-bg)', border: '1px solid var(--tutor-border)' }}>
+              <span style={{ fontFamily: serif, color: 'var(--text-dim)', fontStyle: 'italic' }} className="text-sm">Thinking</span>
+              <span style={{ color: 'var(--text-dim)' }} className="animate-pulse text-sm">…</span>
             </div>
           </div>
         )}
@@ -204,44 +174,23 @@ export default function Chat({ fileId, sessionId }: Props) {
       </div>
 
       {/* Input bar */}
-      <div
-        className="shrink-0 px-8 py-5 flex gap-3"
-        style={{ borderTop: '1px solid #141414' }}
-      >
+      <div className="shrink-0 px-8 py-5 flex gap-3" style={{ borderTop: '1px solid var(--border-subtle)' }}>
         <input
           className="flex-1 rounded-xl px-4 py-3 text-sm transition-colors"
-          style={{
-            background: '#111111',
-            border: '1px solid #1e1e1e',
-            color: '#ddd6cc',
-            outline: 'none',
-          }}
+          style={{ background: 'var(--input-bg)', border: '1px solid var(--input-border)', color: 'var(--text)', outline: 'none' }}
           placeholder="Ask about the case…"
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-          onFocus={(e) => { e.currentTarget.style.borderColor = '#2a2a2a' }}
-          onBlur={(e) => { e.currentTarget.style.borderColor = '#1e1e1e' }}
+          onFocus={(e) => { e.currentTarget.style.borderColor = 'var(--border-hover)'; }}
+          onBlur={(e)  => { e.currentTarget.style.borderColor = 'var(--input-border)'; }}
           disabled={loading}
         />
         <button
           className="px-5 py-3 rounded-xl text-sm transition-all"
-          style={{
-            background: '#141414',
-            border: '1px solid #1e1e1e',
-            color: '#5a5048',
-            fontFamily: mono,
-            fontSize: '12px',
-            letterSpacing: '0.04em',
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.color = '#ddd6cc';
-            e.currentTarget.style.borderColor = '#2a2a2a';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.color = '#5a5048';
-            e.currentTarget.style.borderColor = '#1e1e1e';
-          }}
+          style={{ background: 'var(--card)', border: '1px solid var(--border)', color: 'var(--text-muted)', fontFamily: mono, fontSize: '12px', letterSpacing: '0.04em' }}
+          onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--text)'; e.currentTarget.style.borderColor = 'var(--border-hover)'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.borderColor = 'var(--border)'; }}
           onClick={handleSend}
           disabled={loading}
         >

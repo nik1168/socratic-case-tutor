@@ -1,23 +1,109 @@
 @import "tailwindcss";
 
-*, *::before, *::after {
-  box-sizing: border-box;
+/* ── Dark theme (default) ───────────────────────────────────────────────── */
+:root, [data-theme="dark"] {
+  --bg:              #0c0c0c;
+  --surface:         #111111;
+  --card:            #141414;
+  --border:          #1e1e1e;
+  --border-subtle:   #181818;
+  --border-hover:    #2a2a2a;
+
+  --text:            #ddd6cc;
+  --text-secondary:  #9b9080;
+  --text-muted:      #5a5048;
+  --text-dim:        #383028;
+  --text-faint:      #252220;
+
+  --gold:            #c9a84c;
+  --gold-border:     rgba(201, 168, 76, 0.35);
+  --gold-border-h:   rgba(201, 168, 76, 0.60);
+  --gold-bg-h:       rgba(201, 168, 76, 0.06);
+  --gold-card-h:     rgba(201, 168, 76, 0.20);
+
+  --user-bg:         #161616;
+  --user-border:     #242424;
+  --user-text:       #ddd6cc;
+  --tutor-bg:        #101010;
+  --tutor-border:    #1a1a1a;
+  --tutor-text:      #a09888;
+  --error-bg:        #180e0e;
+  --error-border:    #3a1515;
+  --error-text:      #c05252;
+
+  --badge-i:         #4ade80;
+  --badge-i-bg:      rgba(74, 222, 128, 0.04);
+  --badge-d:         #fbbf24;
+  --badge-d-bg:      rgba(251, 191, 36, 0.04);
+  --badge-s:         #f87171;
+  --badge-s-bg:      rgba(248, 113, 113, 0.04);
+
+  --input-bg:        #111111;
+  --input-border:    #1e1e1e;
+  --upload-bg:       #111111;
+  --upload-icon:     #383028;
+  --upload-icon-b:   #202020;
 }
 
-html, body, #root {
-  height: 100%;
-  margin: 0;
+/* ── Light theme ────────────────────────────────────────────────────────── */
+[data-theme="light"] {
+  --bg:              #f4efe5;
+  --surface:         #ede7db;
+  --card:            #e6dfd2;
+  --border:          #d4cdc0;
+  --border-subtle:   #ddd7ca;
+  --border-hover:    #c8c0b0;
+
+  --text:            #1c1812;
+  --text-secondary:  #6a6050;
+  --text-muted:      #9a8e7e;
+  --text-dim:        #c0b8a8;
+  --text-faint:      #ccc4b4;
+
+  --gold:            #9a6e20;
+  --gold-border:     rgba(154, 110, 32, 0.40);
+  --gold-border-h:   rgba(154, 110, 32, 0.70);
+  --gold-bg-h:       rgba(154, 110, 32, 0.06);
+  --gold-card-h:     rgba(154, 110, 32, 0.18);
+
+  --user-bg:         #e6dfd2;
+  --user-border:     #d4cdc0;
+  --user-text:       #1c1812;
+  --tutor-bg:        #ede7db;
+  --tutor-border:    #ddd7ca;
+  --tutor-text:      #5a5040;
+  --error-bg:        #fdf0f0;
+  --error-border:    #f0c0c0;
+  --error-text:      #991b1b;
+
+  --badge-i:         #15803d;
+  --badge-i-bg:      rgba(21, 128, 61, 0.08);
+  --badge-d:         #92400e;
+  --badge-d-bg:      rgba(146, 64, 14, 0.08);
+  --badge-s:         #991b1b;
+  --badge-s-bg:      rgba(153, 27, 27, 0.08);
+
+  --input-bg:        #ede7db;
+  --input-border:    #d4cdc0;
+  --upload-bg:       #ede7db;
+  --upload-icon:     #9a8e7e;
+  --upload-icon-b:   #c8c0b0;
 }
+
+/* ── Base ───────────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+html, body, #root { height: 100%; margin: 0; }
 
 body {
-  background-color: #0c0c0c;
-  color: #ddd6cc;
+  background-color: var(--bg);
+  color: var(--text);
   font-family: 'DM Sans', system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.25s ease, color 0.25s ease;
 }
 
-/* Subtle film grain */
+/* Film grain */
 body::after {
   content: '';
   position: fixed;
@@ -29,4 +115,4 @@ body::after {
 
 ::-webkit-scrollbar { width: 3px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #252525; border-radius: 2px; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }

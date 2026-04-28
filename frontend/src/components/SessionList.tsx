@@ -5,7 +5,7 @@ interface Props {
   onSelect: (fileId: string) => void;
 }
 
-const mono = "'JetBrains Mono', monospace";
+const mono  = "'JetBrains Mono', monospace";
 const serif = "'Playfair Display', Georgia, serif";
 
 function formatDate(iso: string): string {
@@ -19,14 +19,11 @@ function formatDate(iso: string): string {
 export default function SessionList({ sessions, onSelect }: Props) {
   if (sessions.length === 0) {
     return (
-      <div className="rounded-xl p-16 text-center" style={{ border: '1px dashed #1c1c1c' }}>
-        <p style={{ fontFamily: serif, color: '#2e2a26', fontStyle: 'italic' }} className="text-xl mb-2">
+      <div className="rounded-xl p-16 text-center" style={{ border: '1px dashed var(--border)' }}>
+        <p style={{ fontFamily: serif, color: 'var(--text-dim)', fontStyle: 'italic' }} className="text-xl mb-2">
           No previous sessions
         </p>
-        <p
-          style={{ fontFamily: mono, color: '#222220', fontSize: '11px', letterSpacing: '0.06em' }}
-          className="uppercase"
-        >
+        <p style={{ fontFamily: mono, color: 'var(--text-faint)', fontSize: '11px', letterSpacing: '0.06em' }} className="uppercase">
           upload a case to begin
         </p>
       </div>
@@ -41,27 +38,24 @@ export default function SessionList({ sessions, onSelect }: Props) {
             type="button"
             onClick={() => onSelect(s.file_id)}
             className="w-full text-left rounded-xl p-5 transition-all duration-200"
-            style={{ background: '#141414', border: '1px solid #1e1e1e' }}
+            style={{ background: 'var(--card)', border: '1px solid var(--border)' }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.background = '#181818';
-              e.currentTarget.style.borderColor = 'rgba(201,168,76,0.2)';
+              e.currentTarget.style.background = 'var(--surface)';
+              e.currentTarget.style.borderColor = 'var(--gold-card-h)';
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.background = '#141414';
-              e.currentTarget.style.borderColor = '#1e1e1e';
+              e.currentTarget.style.background = 'var(--card)';
+              e.currentTarget.style.borderColor = 'var(--border)';
             }}
           >
-            <p className="truncate mb-4 text-sm font-medium" style={{ color: '#ddd6cc' }}>
+            <p className="truncate mb-4 text-sm font-medium" style={{ color: 'var(--text)' }}>
               {s.file_name}
             </p>
             <div className="flex items-center justify-between">
-              <span
-                style={{ fontFamily: mono, color: '#333028', fontSize: '10px', letterSpacing: '0.06em' }}
-                className="uppercase"
-              >
+              <span style={{ fontFamily: mono, color: 'var(--text-dim)', fontSize: '10px', letterSpacing: '0.06em' }} className="uppercase">
                 {s.message_count} msg{s.message_count !== 1 ? 's' : ''}
               </span>
-              <span style={{ fontFamily: mono, color: '#333028', fontSize: '10px' }}>
+              <span style={{ fontFamily: mono, color: 'var(--text-dim)', fontSize: '10px' }}>
                 {formatDate(s.last_active_at)}
               </span>
             </div>
