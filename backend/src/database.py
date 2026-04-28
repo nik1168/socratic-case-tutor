@@ -48,19 +48,23 @@ async def upsert_session(pool, session_id: str, file_id: str, file_name: str) ->
 
 
 async def save_messages(pool, session_id: str, file_id: str, messages: list[dict]) -> None:
-    for msg in messages:
-        await pool.execute(
-            """
-            INSERT INTO messages
-                (session_id, file_id, role, content, response_type, thinking_quality, feedback)
-            VALUES ($1, $2, $3, $4, $5, $6, $7)
-            """,
-            session_id, file_id,
-            msg["role"], msg["content"],
-            msg.get("response_type"),
-            msg.get("thinking_quality"),
-            msg.get("feedback"),
-        )
+    await pool.executemany(
+        """
+        INSERT INTO messages
+            (session_id, file_id, role, content, response_type, thinking_quality, feedback)
+        VALUES ($1, $2, $3, $4, $5, $6, $7)
+        """,
+        [
+            (
+                session_id, file_id,
+                msg["role"], msg["content"],
+                msg.get("response_type"),
+                msg.get("thinking_quality"),
+                msg.get("feedback"),
+            )
+            for msg in messages
+        ],
+    )
 
 
 async def get_messages(pool, session_id: str, file_id: str) -> list[dict]:
@@ -69,7 +73,7 @@ async def get_messages(pool, session_id: str, file_id: str) -> list[dict]:
         SELECT role, content, response_type, thinking_quality, feedback
         FROM messages
         WHERE session_id = $1 AND file_id = $2
-        ORDER BY created_at ASC
+        ORDER BY created_at ASC, id ASC
         """,
         session_id, file_id,
     )
