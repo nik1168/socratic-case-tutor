@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 from fastapi.testclient import TestClient
 from src.main import app
 
@@ -22,6 +22,14 @@ def mock_index_pdf(tmp_path, monkeypatch):
 def client(tmp_path, monkeypatch, mock_index_pdf):
     import src.main as main_module
     monkeypatch.setattr(main_module, "UPLOAD_DIR", tmp_path)
+    # Mock all DB functions so unit tests don't need a real Postgres connection.
+    # Tests that need to assert specific DB behavior can override with patch().
+    monkeypatch.setattr(main_module, "upsert_session", AsyncMock(return_value=None))
+    monkeypatch.setattr(main_module, "get_messages", AsyncMock(return_value=[]))
+    monkeypatch.setattr(main_module, "save_messages", AsyncMock(return_value=None))
+    monkeypatch.setattr(main_module, "get_sessions", AsyncMock(return_value=[]))
+    # Pool is not needed since all DB functions are mocked above.
+    app.state.pool = None
     return TestClient(app)
 
 

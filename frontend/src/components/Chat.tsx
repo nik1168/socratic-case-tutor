@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
-import { sendMessage, type ResponseType } from '../api'
+import { sendMessage, getMessages, type ResponseType } from '../api'
 
 interface Message {
   role: 'user' | 'assistant'
@@ -13,24 +13,38 @@ interface Message {
 
 interface Props {
   fileId: string
-  fileName: string
+  sessionId: string
 }
 
-export default function Chat({ fileId, fileName }: Props) {
+export default function Chat({ fileId, sessionId }: Props) {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    getMessages(sessionId, fileId)
+      .then((items) => {
+        const loaded: Message[] = items.map((item) => ({
+          role: item.role,
+          content: item.content,
+          responseType: item.response_type,
+          thinkingQuality: item.thinking_quality,
+          feedback: item.feedback,
+        }))
+        setMessages(loaded)
+      })
+      .catch(console.error)
+  }, [sessionId, fileId])
 
   async function handleSend() {
     const trimmed = input.trim()
     if (!trimmed || loading) return
     const userMessage: Message = { role: 'user', content: trimmed }
-    const history = messages.filter((m) => !m.isError).map(({ role, content }) => ({ role, content }))
     setMessages((prev) => [...prev, userMessage])
     setInput('')
     setLoading(true)
     try {
-      const { response: reply, responseType, thinkingQuality, feedback } = await sendMessage(fileId, trimmed, history)
+      const { response: reply, responseType, thinkingQuality, feedback } = await sendMessage(fileId, sessionId, trimmed)
       setMessages((prev) => {
         const updated = [...prev]
         const lastUserIdx = updated.map((m) => m.role).lastIndexOf('user')
@@ -51,9 +65,6 @@ export default function Chat({ fileId, fileName }: Props) {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="px-4 py-2 bg-gray-100 border-b text-sm text-gray-600">
-        Case: <span className="font-medium">{fileName}</span>
-      </div>
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
         {messages.length === 0 && (
           <p className="text-gray-400 text-sm text-center mt-8">

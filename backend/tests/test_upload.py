@@ -6,6 +6,7 @@ def test_upload_returns_file_id(client, fake_pdf_bytes):
     response = client.post(
         "/upload",
         files={"file": ("case.pdf", io.BytesIO(fake_pdf_bytes), "application/pdf")},
+        data={"session_id": "test-session"},
     )
     assert response.status_code == 200
     body = response.json()
@@ -17,6 +18,7 @@ def test_upload_rejects_non_pdf(client):
     response = client.post(
         "/upload",
         files={"file": ("doc.txt", io.BytesIO(b"hello"), "text/plain")},
+        data={"session_id": "test-session"},
     )
     assert response.status_code == 400
 
@@ -25,6 +27,7 @@ def test_upload_calls_index_pdf(client, mock_index_pdf, fake_pdf_bytes):
     response = client.post(
         "/upload",
         files={"file": ("case.pdf", io.BytesIO(fake_pdf_bytes), "application/pdf")},
+        data={"session_id": "test-session"},
     )
     assert response.status_code == 200
     mock_index_pdf.assert_called_once()
