@@ -2,8 +2,6 @@
 
 An AI-powered Socratic tutor for business case studies. Upload a PDF case, ask questions, and the tutor guides you toward insight — it never gives direct answers. Every response evaluates your critical thinking in real time, giving you a quality badge and actionable feedback to sharpen your analysis.
 
-Built for the kind of rigorous, iterative case preparation that HBS interviews demand.
-
 ---
 
 ## How It Works
