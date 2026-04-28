@@ -28,9 +28,24 @@ export default function Chat({ fileId, sessionId }: Props) {
           role: item.role,
           content: item.content,
           responseType: item.response_type,
-          thinkingQuality: item.thinking_quality,
-          feedback: item.feedback,
         }))
+        // Evaluator data is stored on assistant rows in the DB; re-attach to the preceding user message
+        // to match the live rendering where badges appear below the student's message.
+        for (let i = 0; i < items.length; i++) {
+          const item = items[i]
+          if (item.role === 'assistant' && (item.thinking_quality || item.feedback)) {
+            for (let j = i - 1; j >= 0; j--) {
+              if (loaded[j].role === 'user') {
+                loaded[j] = {
+                  ...loaded[j],
+                  thinkingQuality: item.thinking_quality ?? undefined,
+                  feedback: item.feedback ?? undefined,
+                }
+                break
+              }
+            }
+          }
+        }
         setMessages(loaded)
       })
       .catch(console.error)

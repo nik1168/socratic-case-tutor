@@ -31,6 +31,21 @@ describe('Chat', () => {
     expect(screen.getByText('Hi there, history reply')).toBeInTheDocument()
   })
 
+  it('restores evaluator badges from history', async () => {
+    vi.mocked(api.getMessages).mockResolvedValue([
+      { role: 'user', content: 'What drove growth?' },
+      {
+        role: 'assistant',
+        content: 'Good thinking.',
+        thinking_quality: 'insightful',
+        feedback: 'Nice connection.',
+      },
+    ])
+    render(<Chat fileId="file-1" sessionId="test-session" />)
+    await waitFor(() => expect(screen.getByText(/insightful/i)).toBeInTheDocument())
+    expect(screen.getByText('Nice connection.')).toBeInTheDocument()
+  })
+
   it('submits a message and displays the assistant reply', async () => {
     vi.mocked(api.sendMessage).mockResolvedValue({
       response: 'What do you think drove their growth?',
