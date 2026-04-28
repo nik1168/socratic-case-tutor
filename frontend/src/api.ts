@@ -18,8 +18,8 @@ export interface SessionItem {
 export interface MessageItem {
   role: 'user' | 'assistant';
   content: string;
-  response_type?: string;
-  thinking_quality?: string;
+  response_type?: ResponseType;
+  thinking_quality?: 'shallow' | 'developing' | 'insightful';
   feedback?: string;
 }
 
@@ -62,14 +62,16 @@ export async function sendMessage(
 
 export async function getSessions(sessionId: string): Promise<SessionItem[]> {
   const res = await fetch(`${API_URL}/sessions/${sessionId}`)
-  if (!res.ok) throw new Error(`Get sessions failed: ${res.statusText}`)
+  if (!res.ok) throw new Error(`getSessions failed: ${res.status}`)
   const data = await res.json()
+  if (!Array.isArray(data)) throw new Error('getSessions: unexpected response shape')
   return data as SessionItem[]
 }
 
 export async function getMessages(sessionId: string, fileId: string): Promise<MessageItem[]> {
   const res = await fetch(`${API_URL}/sessions/${sessionId}/${fileId}/messages`)
-  if (!res.ok) throw new Error(`Get messages failed: ${res.statusText}`)
+  if (!res.ok) throw new Error(`getMessages failed: ${res.status}`)
   const data = await res.json()
+  if (!Array.isArray(data)) throw new Error('getMessages: unexpected response shape')
   return data as MessageItem[]
 }
