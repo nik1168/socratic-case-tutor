@@ -8,9 +8,25 @@ function isResponseType(value: unknown): value is ResponseType {
   return typeof value === 'string' && (RESPONSE_TYPES as string[]).includes(value)
 }
 
-export async function uploadPdf(file: File): Promise<string> {
+export interface SessionItem {
+  file_id: string;
+  file_name: string;
+  last_active_at: string;
+  message_count: number;
+}
+
+export interface MessageItem {
+  role: 'user' | 'assistant';
+  content: string;
+  response_type?: string;
+  thinking_quality?: string;
+  feedback?: string;
+}
+
+export async function uploadPdf(file: File, sessionId: string): Promise<string> {
   const form = new FormData()
   form.append('file', file)
+  form.append('session_id', sessionId)
   const res = await fetch(`${API_URL}/upload`, { method: 'POST', body: form })
   if (!res.ok) throw new Error(`Upload failed: ${res.statusText}`)
   const data = await res.json()
@@ -21,16 +37,16 @@ export async function uploadPdf(file: File): Promise<string> {
 
 export async function sendMessage(
   fileId: string,
+  sessionId: string,
   message: string,
-  conversationHistory: Array<{ role: 'user' | 'assistant'; content: string }> = []
 ): Promise<{ response: string; responseType: ResponseType; thinkingQuality: string; feedback: string }> {
   const res = await fetch(`${API_URL}/chat`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       file_id: fileId,
+      session_id: sessionId,
       message,
-      conversation_history: conversationHistory,
     }),
   })
   if (!res.ok) throw new Error(`Chat failed: ${res.statusText}`)
@@ -42,4 +58,18 @@ export async function sendMessage(
   if (typeof response !== 'string') throw new Error('Unexpected response: missing response')
   if (!isResponseType(responseType)) throw new Error('Unexpected response: invalid response_type')
   return { response, responseType, thinkingQuality: String(thinkingQuality), feedback: String(feedback) }
+}
+
+export async function getSessions(sessionId: string): Promise<SessionItem[]> {
+  const res = await fetch(`${API_URL}/sessions/${sessionId}`)
+  if (!res.ok) throw new Error(`Get sessions failed: ${res.statusText}`)
+  const data = await res.json()
+  return data as SessionItem[]
+}
+
+export async function getMessages(sessionId: string, fileId: string): Promise<MessageItem[]> {
+  const res = await fetch(`${API_URL}/sessions/${sessionId}/${fileId}/messages`)
+  if (!res.ok) throw new Error(`Get messages failed: ${res.statusText}`)
+  const data = await res.json()
+  return data as MessageItem[]
 }
