@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 from langchain_anthropic import ChatAnthropic
@@ -11,7 +12,8 @@ from langchain_core.vectorstores import VectorStoreRetriever
 from langchain_openai import OpenAIEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
-CHROMA_DIR = Path(__file__).resolve().parent.parent / "chroma"
+DATA_DIR = Path(os.environ.get("DATA_DIR", Path(__file__).resolve().parent.parent))
+CHROMA_DIR = DATA_DIR / "chroma"
 
 SYSTEM_PROMPT = """You are an AI tutor helping students analyze business case studies.
 Your role is to help students think critically about the cases they are reading.
