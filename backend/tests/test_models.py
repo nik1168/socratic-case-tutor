@@ -1,27 +1,19 @@
 import pytest
 from pydantic import ValidationError
 
-from src.models import ChatRequest, ChatResponse, Message
+from src.models import ChatRequest, ChatResponse, MessageItem, SessionItem
 
 
-def test_chat_request_accepts_conversation_history():
-    req = ChatRequest(
-        file_id="abc",
-        message="hello",
-        conversation_history=[
-            Message(role="user", content="first"),
-            Message(role="assistant", content="second"),
-        ],
-    )
-    assert len(req.conversation_history) == 2
-    assert req.conversation_history[0].role == "user"
-    assert req.conversation_history[0].content == "first"
-    assert req.conversation_history[1].role == "assistant"
+def test_chat_request_requires_session_id():
+    req = ChatRequest(file_id="abc", session_id="session-1", message="hello")
+    assert req.session_id == "session-1"
+    assert req.file_id == "abc"
+    assert req.message == "hello"
 
 
-def test_chat_request_defaults_conversation_history_to_empty():
-    req = ChatRequest(file_id="abc", message="hello")
-    assert req.conversation_history == []
+def test_chat_request_rejects_missing_session_id():
+    with pytest.raises(ValidationError):
+        ChatRequest(file_id="abc", message="hello")
 
 
 def test_chat_response_includes_response_type():
@@ -74,3 +66,27 @@ def test_chat_response_rejects_invalid_thinking_quality():
             thinking_quality="excellent",
             feedback="test",
         )
+
+
+def test_session_item_fields():
+    s = SessionItem(
+        file_id="file-1",
+        file_name="airbnb.pdf",
+        last_active_at="2026-04-27T10:00:00+00:00",
+        message_count=4,
+    )
+    assert s.file_id == "file-1"
+    assert s.file_name == "airbnb.pdf"
+    assert s.message_count == 4
+
+
+def test_message_item_optional_fields_default_to_none():
+    m = MessageItem(role="user", content="hello")
+    assert m.response_type is None
+    assert m.thinking_quality is None
+    assert m.feedback is None
+
+
+def test_message_item_rejects_invalid_role():
+    with pytest.raises(ValidationError):
+        MessageItem(role="system", content="hello")
