@@ -103,6 +103,17 @@ export default function FileUpload({ sessionId, onUpload }: Props) {
       {error && (
         <p style={{ color: 'var(--error-text)', fontFamily: mono, fontSize: '12px' }}>{error}</p>
       )}
+
+      <a
+        href="/sample.pdf"
+        download="sample-case.pdf"
+        onClick={(e) => e.stopPropagation()}
+        style={{ fontFamily: mono, color: 'var(--text-dim)', fontSize: '11px', letterSpacing: '0.05em', textDecoration: 'none' }}
+        onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--gold)'; }}
+        onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-dim)'; }}
+      >
+        ↓ download sample case
+      </a>
     </div>
   )
 }
