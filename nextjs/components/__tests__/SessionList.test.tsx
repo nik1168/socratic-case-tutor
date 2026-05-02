@@ -44,4 +44,13 @@ describe('SessionList', () => {
     fireEvent.click(screen.getByText('airbnb.pdf'))
     expect(mockPush).toHaveBeenCalledWith('/chat/file-1?name=airbnb.pdf')
   })
+
+  it('encodes special characters in the file name query param', async () => {
+    const spaced = [{ file_id: 'file-3', file_name: 'My Case Study.pdf', last_active_at: '2026-04-28T10:00:00+00:00', message_count: 1 }]
+    vi.mocked(api.getSessions).mockResolvedValue(spaced)
+    renderWithProvider()
+    await waitFor(() => screen.getByText('My Case Study.pdf'))
+    fireEvent.click(screen.getByText('My Case Study.pdf'))
+    expect(mockPush).toHaveBeenCalledWith('/chat/file-3?name=My%20Case%20Study.pdf')
+  })
 })

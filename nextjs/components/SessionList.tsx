@@ -26,8 +26,9 @@ export default function SessionList() {
   useEffect(() => {
     if (!sessionId) return
     getSessions(sessionId)
-      .then((data) => { setSessions(data); setLoaded(true) })
+      .then((data) => { setSessions(data) })
       .catch(console.error)
+      .finally(() => setLoaded(true))
   }, [sessionId])
 
   if (!loaded) return null
