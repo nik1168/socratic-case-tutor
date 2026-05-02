@@ -1,9 +1,8 @@
 // nextjs/vitest.setup.ts
-import { afterEach, expect, vi } from 'vitest'
+import { afterEach, vi } from 'vitest'
 import { cleanup } from '@testing-library/react'
-import * as jestDomMatchers from '@testing-library/jest-dom/matchers'
+import '@testing-library/jest-dom/vitest'
 
-expect.extend(jestDomMatchers)
 afterEach(() => cleanup())
 
 vi.mock('next/navigation', () => ({
