@@ -8,6 +8,8 @@ import Chat from '@/components/Chat'
 import ThemeToggle from '@/components/ThemeToggle'
 import { useSessionId } from '@/providers/SessionProvider'
 
+export const dynamic = 'force-dynamic'
+
 const serif = 'var(--font-playfair), Georgia, serif'
 const mono  = 'var(--font-jetbrains), monospace'
 

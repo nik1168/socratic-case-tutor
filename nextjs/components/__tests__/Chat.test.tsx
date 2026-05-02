@@ -95,6 +95,13 @@ describe('Chat', () => {
     )
   })
 
+  it('does not send a message when sessionId is empty', async () => {
+    render(<Chat fileId="file-1" sessionId="" />)
+    await userEvent.type(screen.getByRole('textbox'), 'Hello')
+    await userEvent.click(screen.getByRole('button', { name: /send/i }))
+    expect(api.sendMessage).not.toHaveBeenCalled()
+  })
+
   it('shows thinking quality badge on user message after response', async () => {
     vi.mocked(api.sendMessage).mockResolvedValue({
       response: 'Good question.',

@@ -43,12 +43,14 @@ export default function Chat({ fileId, sessionId }: Props) {
           content: item.content,
           responseType: item.response_type,
         }))
+        const taggedUserIndices = new Set<number>()
         for (let i = 0; i < items.length; i++) {
           const item = items[i]
           if (item.role === 'assistant' && (item.thinking_quality || item.feedback)) {
             for (let j = i - 1; j >= 0; j--) {
-              if (loaded[j].role === 'user') {
-                loaded[j] = { ...loaded[j], thinkingQuality: item.thinking_quality ?? undefined, feedback: item.feedback ?? undefined }
+              if (loaded[j].role === 'user' && !taggedUserIndices.has(j)) {
+                loaded[j] = { ...loaded[j], thinkingQuality: item.thinking_quality, feedback: item.feedback ?? undefined }
+                taggedUserIndices.add(j)
                 break
               }
             }
@@ -65,7 +67,7 @@ export default function Chat({ fileId, sessionId }: Props) {
 
   async function handleSend() {
     const trimmed = input.trim()
-    if (!trimmed || loading) return
+    if (!trimmed || loading || !sessionId) return
     setMessages((prev) => [...prev, { role: 'user', content: trimmed }])
     setInput('')
     setLoading(true)
@@ -174,7 +176,7 @@ export default function Chat({ fileId, sessionId }: Props) {
           onKeyDown={(e) => e.key === 'Enter' && handleSend()}
           onFocus={(e) => { e.currentTarget.style.borderColor = 'var(--border-hover)' }}
           onBlur={(e)  => { e.currentTarget.style.borderColor = 'var(--input-border)' }}
-          disabled={loading}
+          disabled={loading || !sessionId}
         />
         <button
           className="px-5 py-3 rounded-xl text-sm transition-all"
@@ -182,7 +184,7 @@ export default function Chat({ fileId, sessionId }: Props) {
           onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--text)'; e.currentTarget.style.borderColor = 'var(--border-hover)' }}
           onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.borderColor = 'var(--border)' }}
           onClick={handleSend}
-          disabled={loading}
+          disabled={loading || !sessionId}
         >
           Send
         </button>
