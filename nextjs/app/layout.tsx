@@ -34,7 +34,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){var t=localStorage.getItem('case_tutor_theme')||'dark';document.documentElement.setAttribute('data-theme',t);})();`,
+            __html: `(function(){try{var t=localStorage.getItem('case_tutor_theme')||'dark';document.documentElement.setAttribute('data-theme',t);}catch(e){}})();`,
           }}
         />
       </head>

@@ -7,7 +7,9 @@ export default function ThemeToggle() {
 
   useEffect(() => {
     const stored = localStorage.getItem('case_tutor_theme') as 'dark' | 'light' | null
-    if (stored) setTheme(stored)
+    const initial = stored ?? 'dark'
+    setTheme(initial)
+    document.documentElement.setAttribute('data-theme', initial)
   }, [])
 
   function toggle() {
