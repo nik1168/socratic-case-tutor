@@ -23,10 +23,12 @@ export default function FileUpload({ sessionId, onUpload }: Props) {
       setStatus('error')
       return
     }
+    if (!sessionId) return
     setStatus('uploading')
     setError('')
     try {
       const fileId = await uploadPdf(file, sessionId)
+      setStatus('idle')
       onUpload(fileId, file.name)
     } catch {
       setError('Upload failed. Check that the backend is running.')
@@ -49,7 +51,7 @@ export default function FileUpload({ sessionId, onUpload }: Props) {
       onDragOver={(e) => { e.preventDefault(); setDragging(true) }}
       onDragLeave={() => setDragging(false)}
       onDrop={handleDrop}
-      onClick={() => !uploading && inputRef.current?.click()}
+      onClick={() => !uploading && sessionId && inputRef.current?.click()}
       className="flex flex-col items-center gap-7 px-10 py-16 rounded-2xl transition-all duration-300 cursor-pointer"
       style={{
         border: dragging ? '2px dashed var(--gold-border-h)' : '2px dashed var(--border)',
@@ -79,7 +81,7 @@ export default function FileUpload({ sessionId, onUpload }: Props) {
       </div>
       <button
         type="button"
-        disabled={uploading}
+        disabled={uploading || !sessionId}
         onClick={(e) => { e.stopPropagation(); inputRef.current?.click() }}
         className="px-5 py-2 rounded text-sm transition-all duration-200"
         style={{ border: '1px solid var(--border)', color: 'var(--text-muted)', fontFamily: mono, fontSize: '12px', letterSpacing: '0.04em', background: 'transparent' }}

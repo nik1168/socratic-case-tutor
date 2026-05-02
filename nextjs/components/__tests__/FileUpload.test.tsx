@@ -34,4 +34,14 @@ describe('FileUpload', () => {
       expect(screen.getByText('Upload failed. Check that the backend is running.')).toBeInTheDocument()
     )
   })
+
+  it('rejects non-PDF files and shows an error without calling the API', async () => {
+    const uploadPdfSpy = vi.mocked(api.uploadPdf)
+    const { container } = render(<FileUpload sessionId="test-session" onUpload={vi.fn()} />)
+    const file = new File(['hello'], 'doc.txt', { type: 'text/plain' })
+    const input = container.querySelector('input[type="file"]') as HTMLInputElement
+    await userEvent.upload(input, file, { applyAccept: false })
+    expect(screen.getByText('Please select a PDF file.')).toBeInTheDocument()
+    expect(uploadPdfSpy).not.toHaveBeenCalled()
+  })
 })
