@@ -1,0 +1,118 @@
+@import "tailwindcss";
+
+/* ── Dark theme (default) ───────────────────────────────────────────────── */
+:root, [data-theme="dark"] {
+  --bg:              #242424;
+  --surface:         #2c2c2c;
+  --card:            #333333;
+  --border:          #454545;
+  --border-subtle:   #3a3a3a;
+  --border-hover:    #585858;
+
+  --text:            #f0ebe4;
+  --text-secondary:  #c4bcb0;
+  --text-muted:      #8e8680;
+  --text-dim:        #6e6860;
+  --text-faint:      #585048;
+
+  --gold:            #d4af5a;
+  --gold-border:     rgba(212, 175, 90, 0.40);
+  --gold-border-h:   rgba(212, 175, 90, 0.65);
+  --gold-bg-h:       rgba(212, 175, 90, 0.08);
+  --gold-card-h:     rgba(212, 175, 90, 0.25);
+
+  --user-bg:         #333333;
+  --user-border:     #464646;
+  --user-text:       #f0ebe4;
+  --tutor-bg:        #2c2c2c;
+  --tutor-border:    #3c3c3c;
+  --tutor-text:      #b8b0a4;
+  --error-bg:        #3a2020;
+  --error-border:    #5a2c2c;
+  --error-text:      #f08080;
+
+  --badge-i:         #4ade80;
+  --badge-i-bg:      rgba(74, 222, 128, 0.10);
+  --badge-d:         #fbbf24;
+  --badge-d-bg:      rgba(251, 191, 36, 0.10);
+  --badge-s:         #f87171;
+  --badge-s-bg:      rgba(248, 113, 113, 0.10);
+
+  --input-bg:        #2c2c2c;
+  --input-border:    #454545;
+  --upload-bg:       #2c2c2c;
+  --upload-icon:     #6e6860;
+  --upload-icon-b:   #464646;
+}
+
+/* ── Light theme ────────────────────────────────────────────────────────── */
+[data-theme="light"] {
+  --bg:              #f4efe5;
+  --surface:         #ede7db;
+  --card:            #e6dfd2;
+  --border:          #d4cdc0;
+  --border-subtle:   #ddd7ca;
+  --border-hover:    #c8c0b0;
+
+  --text:            #1c1812;
+  --text-secondary:  #6a6050;
+  --text-muted:      #9a8e7e;
+  --text-dim:        #c0b8a8;
+  --text-faint:      #ccc4b4;
+
+  --gold:            #9a6e20;
+  --gold-border:     rgba(154, 110, 32, 0.40);
+  --gold-border-h:   rgba(154, 110, 32, 0.70);
+  --gold-bg-h:       rgba(154, 110, 32, 0.06);
+  --gold-card-h:     rgba(154, 110, 32, 0.18);
+
+  --user-bg:         #e6dfd2;
+  --user-border:     #d4cdc0;
+  --user-text:       #1c1812;
+  --tutor-bg:        #ede7db;
+  --tutor-border:    #ddd7ca;
+  --tutor-text:      #5a5040;
+  --error-bg:        #fdf0f0;
+  --error-border:    #f0c0c0;
+  --error-text:      #991b1b;
+
+  --badge-i:         #15803d;
+  --badge-i-bg:      rgba(21, 128, 61, 0.08);
+  --badge-d:         #92400e;
+  --badge-d-bg:      rgba(146, 64, 14, 0.08);
+  --badge-s:         #991b1b;
+  --badge-s-bg:      rgba(153, 27, 27, 0.08);
+
+  --input-bg:        #ede7db;
+  --input-border:    #d4cdc0;
+  --upload-bg:       #ede7db;
+  --upload-icon:     #9a8e7e;
+  --upload-icon-b:   #c8c0b0;
+}
+
+/* ── Base ───────────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+
+body {
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+/* Film grain */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.028'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 9999;
+}
+
+::-webkit-scrollbar { width: 3px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }

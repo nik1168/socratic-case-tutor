@@ -27,3 +27,9 @@ frontend/dist/
 
 # Git worktrees
 .worktrees/
+
+# Next.js
+nextjs/.next/
+nextjs/node_modules/
+nextjs/.env.local
+.superpowers/
