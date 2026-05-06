@@ -151,3 +151,36 @@ async def get_quality_over_time(pool) -> list[dict]:
         }
         for row in rows
     ]
+
+
+async def get_analytics_sessions(pool) -> list[dict]:
+    rows = await pool.fetch(
+        """
+        SELECT
+            s.session_id,
+            s.file_id,
+            s.file_name,
+            s.last_active_at,
+            COUNT(CASE WHEN m.role = 'user' THEN 1 END)::int AS message_count,
+            COUNT(CASE WHEN m.thinking_quality = 'shallow' THEN 1 END)::int AS shallow,
+            COUNT(CASE WHEN m.thinking_quality = 'developing' THEN 1 END)::int AS developing,
+            COUNT(CASE WHEN m.thinking_quality = 'insightful' THEN 1 END)::int AS insightful
+        FROM sessions s
+        LEFT JOIN messages m ON m.session_id = s.session_id AND m.file_id = s.file_id
+        GROUP BY s.session_id, s.file_id, s.file_name, s.last_active_at
+        ORDER BY s.last_active_at DESC
+        """
+    )
+    return [
+        {
+            "session_id": row["session_id"],
+            "file_id": row["file_id"],
+            "file_name": row["file_name"],
+            "last_active_at": row["last_active_at"].isoformat(),
+            "message_count": row["message_count"],
+            "shallow": row["shallow"],
+            "developing": row["developing"],
+            "insightful": row["insightful"],
+        }
+        for row in rows
+    ]

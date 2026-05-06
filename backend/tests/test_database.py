@@ -6,6 +6,7 @@ import pytest
 
 from src.database import (
     get_analytics_overview,
+    get_analytics_sessions,
     get_messages,
     get_quality_over_time,
     get_sessions,
@@ -142,3 +143,26 @@ async def test_quality_over_time_excludes_null_quality(conn):
     ])
     rows = await get_quality_over_time(conn)
     assert rows == []
+
+
+async def test_analytics_sessions_returns_per_session_stats(conn):
+    await upsert_session(conn, "s1", "f1", "airbnb.pdf")
+    await save_messages(conn, "s1", "f1", [
+        {"role": "user", "content": "Q1"},
+        {"role": "assistant", "content": "A1", "response_type": "socratic_response",
+         "thinking_quality": "developing", "feedback": "ok"},
+        {"role": "user", "content": "Q2"},
+        {"role": "assistant", "content": "A2", "response_type": "socratic_response",
+         "thinking_quality": "insightful", "feedback": "great"},
+    ])
+    rows = await get_analytics_sessions(conn)
+    assert len(rows) == 1
+    row = rows[0]
+    assert row["session_id"] == "s1"
+    assert row["file_id"] == "f1"
+    assert row["file_name"] == "airbnb.pdf"
+    assert row["message_count"] == 2    # user messages only
+    assert row["developing"] == 1
+    assert row["insightful"] == 1
+    assert row["shallow"] == 0
+    assert "last_active_at" in row
