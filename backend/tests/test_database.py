@@ -7,6 +7,7 @@ import pytest
 from src.database import (
     get_analytics_overview,
     get_messages,
+    get_quality_over_time,
     get_sessions,
     init_db,
     save_messages,
@@ -111,3 +112,33 @@ async def test_analytics_overview_counts_sessions_and_messages(conn):
     assert result["quality_distribution"]["shallow"] == 1
     assert result["quality_distribution"]["insightful"] == 1
     assert result["quality_distribution"]["developing"] == 0
+
+
+async def test_quality_over_time_groups_by_day(conn):
+    await upsert_session(conn, "s1", "f1", "airbnb.pdf")
+    # Two assistant messages inserted at the DB default timestamp (NOW())
+    # Both land in today's bucket
+    await save_messages(conn, "s1", "f1", [
+        {"role": "user", "content": "Q1"},
+        {"role": "assistant", "content": "A1", "response_type": "socratic_response",
+         "thinking_quality": "shallow", "feedback": "ok"},
+        {"role": "user", "content": "Q2"},
+        {"role": "assistant", "content": "A2", "response_type": "socratic_response",
+         "thinking_quality": "insightful", "feedback": "great"},
+    ])
+    rows = await get_quality_over_time(conn)
+    assert len(rows) == 1          # one day bucket
+    today = rows[0]
+    assert "date" in today
+    assert today["shallow"] == 1
+    assert today["insightful"] == 1
+    assert today["developing"] == 0
+
+
+async def test_quality_over_time_excludes_null_quality(conn):
+    await upsert_session(conn, "s1", "f1", "airbnb.pdf")
+    await save_messages(conn, "s1", "f1", [
+        {"role": "user", "content": "Q1"},   # user rows have NULL quality — excluded
+    ])
+    rows = await get_quality_over_time(conn)
+    assert rows == []

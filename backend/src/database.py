@@ -126,3 +126,28 @@ async def get_analytics_overview(pool) -> dict:
             "insightful": row["insightful"],
         },
     }
+
+
+async def get_quality_over_time(pool) -> list[dict]:
+    rows = await pool.fetch(
+        """
+        SELECT
+            DATE_TRUNC('day', created_at)::date AS date,
+            COUNT(CASE WHEN thinking_quality = 'shallow' THEN 1 END)::int AS shallow,
+            COUNT(CASE WHEN thinking_quality = 'developing' THEN 1 END)::int AS developing,
+            COUNT(CASE WHEN thinking_quality = 'insightful' THEN 1 END)::int AS insightful
+        FROM messages
+        WHERE role = 'assistant' AND thinking_quality IS NOT NULL
+        GROUP BY DATE_TRUNC('day', created_at)
+        ORDER BY DATE_TRUNC('day', created_at) ASC
+        """
+    )
+    return [
+        {
+            "date": row["date"].isoformat(),
+            "shallow": row["shallow"],
+            "developing": row["developing"],
+            "insightful": row["insightful"],
+        }
+        for row in rows
+    ]
