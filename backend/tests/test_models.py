@@ -90,3 +90,44 @@ def test_message_item_optional_fields_default_to_none():
 def test_message_item_rejects_invalid_role():
     with pytest.raises(ValidationError):
         MessageItem(role="system", content="hello")
+
+
+from src.models import (
+    AnalyticsOverview, QualityDay, AnalyticsSession, AnalyticsFile,
+)
+
+
+def test_analytics_overview_shape():
+    m = AnalyticsOverview(
+        total_sessions=3,
+        total_messages=15,
+        quality_distribution={"shallow": 4, "developing": 7, "insightful": 4},
+    )
+    assert m.total_sessions == 3
+    assert m.quality_distribution["insightful"] == 4
+
+
+def test_quality_day_shape():
+    d = QualityDay(date="2026-04-25", shallow=2, developing=3, insightful=1)
+    assert d.date == "2026-04-25"
+    assert d.insightful == 1
+
+
+def test_analytics_session_shape():
+    s = AnalyticsSession(
+        session_id="s1", file_id="f1", file_name="airbnb.pdf",
+        last_active_at="2026-04-27T10:00:00+00:00",
+        message_count=4, shallow=1, developing=2, insightful=1,
+    )
+    assert s.file_name == "airbnb.pdf"
+    assert s.message_count == 4
+
+
+def test_analytics_file_shape():
+    f = AnalyticsFile(
+        file_id="f1", file_name="airbnb.pdf",
+        session_count=2, message_count=8,
+        shallow=2, developing=4, insightful=2,
+    )
+    assert f.session_count == 2
+    assert f.message_count == 8
