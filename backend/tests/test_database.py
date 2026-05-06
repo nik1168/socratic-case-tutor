@@ -4,7 +4,17 @@ import os
 import asyncpg
 import pytest
 
-from src.database import get_messages, get_sessions, init_db, save_messages, upsert_session
+from src.database import (
+    get_analytics_files,
+    get_analytics_overview,
+    get_analytics_sessions,
+    get_messages,
+    get_quality_over_time,
+    get_sessions,
+    init_db,
+    save_messages,
+    upsert_session,
+)
 
 
 @pytest.fixture
@@ -83,3 +93,24 @@ async def test_get_sessions_returns_ordered_by_last_active(conn):
 async def test_get_messages_returns_empty_for_unknown_session(conn):
     msgs = await get_messages(conn, "no-such-user", "no-such-file")
     assert msgs == []
+
+
+async def test_analytics_overview_counts_sessions_and_messages(conn):
+    await upsert_session(conn, "s1", "f1", "airbnb.pdf")
+    await upsert_session(conn, "s1", "f2", "netflix.pdf")
+    await save_messages(conn, "s1", "f1", [
+        {"role": "user", "content": "Hello"},
+        {"role": "assistant", "content": "Hi", "response_type": "socratic_response",
+         "thinking_quality": "shallow", "feedback": "dig deeper"},
+    ])
+    await save_messages(conn, "s1", "f2", [
+        {"role": "user", "content": "What is this?"},
+        {"role": "assistant", "content": "Good question", "response_type": "socratic_response",
+         "thinking_quality": "insightful", "feedback": "excellent"},
+    ])
+    result = await get_analytics_overview(conn)
+    assert result["total_sessions"] == 2
+    assert result["total_messages"] == 2   # user messages only
+    assert result["quality_distribution"]["shallow"] == 1
+    assert result["quality_distribution"]["insightful"] == 1
+    assert result["quality_distribution"]["developing"] == 0

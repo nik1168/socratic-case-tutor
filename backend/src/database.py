@@ -103,3 +103,39 @@ async def get_sessions(pool, session_id: str) -> list[dict]:
         }
         for row in rows
     ]
+
+
+async def get_analytics_overview(pool) -> dict:
+    row = await pool.fetchrow(
+        """
+        SELECT
+            (SELECT COUNT(*)::int FROM sessions) AS total_sessions,
+            COUNT(CASE WHEN role = 'user' THEN 1 END)::int AS total_messages,
+            COUNT(CASE WHEN thinking_quality = 'shallow' THEN 1 END)::int AS shallow,
+            COUNT(CASE WHEN thinking_quality = 'developing' THEN 1 END)::int AS developing,
+            COUNT(CASE WHEN thinking_quality = 'insightful' THEN 1 END)::int AS insightful
+        FROM messages
+        """
+    )
+    return {
+        "total_sessions": row["total_sessions"],
+        "total_messages": row["total_messages"],
+        "quality_distribution": {
+            "shallow": row["shallow"],
+            "developing": row["developing"],
+            "insightful": row["insightful"],
+        },
+    }
+
+
+# Placeholder stubs for future analytics functions (Task 3-5)
+async def get_quality_over_time(pool) -> list[dict]:
+    pass
+
+
+async def get_analytics_sessions(pool) -> list[dict]:
+    pass
+
+
+async def get_analytics_files(pool) -> list[dict]:
+    pass
