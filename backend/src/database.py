@@ -126,16 +126,3 @@ async def get_analytics_overview(pool) -> dict:
             "insightful": row["insightful"],
         },
     }
-
-
-# Placeholder stubs for future analytics functions (Task 3-5)
-async def get_quality_over_time(pool) -> list[dict]:
-    pass
-
-
-async def get_analytics_sessions(pool) -> list[dict]:
-    pass
-
-
-async def get_analytics_files(pool) -> list[dict]:
-    pass

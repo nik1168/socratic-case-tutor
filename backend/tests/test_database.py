@@ -5,11 +5,8 @@ import asyncpg
 import pytest
 
 from src.database import (
-    get_analytics_files,
     get_analytics_overview,
-    get_analytics_sessions,
     get_messages,
-    get_quality_over_time,
     get_sessions,
     init_db,
     save_messages,
