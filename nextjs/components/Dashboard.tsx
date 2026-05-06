@@ -4,13 +4,13 @@
 import { useEffect, useState } from 'react'
 import {
   getAnalyticsOverview,
-  getAnalyticsQualityOverTime,
+  getQualityOverTime,
   getAnalyticsSessions,
   getAnalyticsFiles,
-  type OverviewData,
-  type QualityTimePoint,
-  type SessionAnalytics,
-  type FileAnalytics,
+  type AnalyticsOverview,
+  type QualityDay,
+  type AnalyticsSession,
+  type AnalyticsFile,
 } from '@/lib/api'
 
 const serif = 'var(--font-playfair), Georgia, serif'
@@ -54,17 +54,17 @@ function dominantQuality(dist: { shallow: number; developing: number; insightful
 }
 
 export default function Dashboard() {
-  const [overview,    setOverview]    = useState<OverviewData | null>(null)
-  const [qualityTime, setQualityTime] = useState<QualityTimePoint[]>([])
-  const [sessions,    setSessions]    = useState<SessionAnalytics[]>([])
-  const [files,       setFiles]       = useState<FileAnalytics[]>([])
+  const [overview,    setOverview]    = useState<AnalyticsOverview | null>(null)
+  const [qualityTime, setQualityTime] = useState<QualityDay[]>([])
+  const [sessions,    setSessions]    = useState<AnalyticsSession[]>([])
+  const [files,       setFiles]       = useState<AnalyticsFile[]>([])
   const [sortKey,     setSortKey]     = useState<SortKey>('last_active_at')
   const [loaded,      setLoaded]      = useState(false)
 
   useEffect(() => {
     Promise.all([
       getAnalyticsOverview(),
-      getAnalyticsQualityOverTime(),
+      getQualityOverTime(),
       getAnalyticsSessions(),
       getAnalyticsFiles(),
     ])
