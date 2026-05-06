@@ -40,7 +40,7 @@ beforeEach(() => {
 })
 
 describe('Dashboard', () => {
-  it('shows no content while loading', () => {
+  it('returns null before data loads', () => {
     render(<Dashboard />)
     // Component returns null while fetching — stat cards not yet present
     expect(screen.queryByTestId('stat-total-sessions')).not.toBeInTheDocument()

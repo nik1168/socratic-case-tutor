@@ -95,4 +95,5 @@ test('shows empty-state messages when API returns no data', async ({ page }) => 
   await page.goto('/dashboard')
   await expect(page.getByText('No data yet.').first()).toBeVisible()
   await expect(page.getByText('No sessions yet.')).toBeVisible()
+  await expect(page.getByTestId('badge-top-level')).not.toBeVisible()
 })
