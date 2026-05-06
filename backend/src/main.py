@@ -14,9 +14,29 @@ from fastapi.middleware.cors import CORSMiddleware
 from langchain_core.messages import AIMessage, HumanMessage
 
 from src.agent import run_agent
-from src.database import get_messages, get_sessions, init_db, save_messages, upsert_session
+from src.database import (
+    get_analytics_files,
+    get_analytics_overview,
+    get_analytics_sessions,
+    get_messages,
+    get_quality_over_time,
+    get_sessions,
+    init_db,
+    save_messages,
+    upsert_session,
+)
 from src.evaluator import evaluate_message
-from src.models import ChatRequest, ChatResponse, MessageItem, SessionItem, UploadResponse
+from src.models import (
+    AnalyticsFile,
+    AnalyticsOverview,
+    AnalyticsSession,
+    ChatRequest,
+    ChatResponse,
+    MessageItem,
+    QualityDay,
+    SessionItem,
+    UploadResponse,
+)
 from src.rag_service import CHROMA_DIR, index_pdf
 
 DATA_DIR = Path(os.environ.get("DATA_DIR", Path(__file__).resolve().parent.parent))
@@ -126,3 +146,23 @@ async def list_sessions(session_id: str):
 @app.get("/sessions/{session_id}/{file_id}/messages", response_model=list[MessageItem])
 async def list_messages(session_id: str, file_id: str):
     return await get_messages(app.state.pool, session_id, file_id)
+
+
+@app.get("/analytics/overview", response_model=AnalyticsOverview)
+async def analytics_overview():
+    return await get_analytics_overview(app.state.pool)
+
+
+@app.get("/analytics/quality-over-time", response_model=list[QualityDay])
+async def analytics_quality_over_time():
+    return await get_quality_over_time(app.state.pool)
+
+
+@app.get("/analytics/sessions", response_model=list[AnalyticsSession])
+async def analytics_sessions():
+    return await get_analytics_sessions(app.state.pool)
+
+
+@app.get("/analytics/files", response_model=list[AnalyticsFile])
+async def analytics_files():
+    return await get_analytics_files(app.state.pool)
