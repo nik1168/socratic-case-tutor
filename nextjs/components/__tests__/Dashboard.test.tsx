@@ -1,16 +1,7 @@
-import { render, screen, waitFor, fireEvent } from '@testing-library/react'
-import { describe, it, expect, vi, beforeEach, beforeAll } from 'vitest'
+import { render, screen, waitFor, fireEvent, within } from '@testing-library/react'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import Dashboard from '../Dashboard'
 import * as api from '@/lib/api'
-
-// Recharts uses ResizeObserver — mock it for jsdom
-beforeAll(() => {
-  globalThis.ResizeObserver = class ResizeObserver {
-    observe() {}
-    unobserve() {}
-    disconnect() {}
-  }
-})
 
 vi.mock('@/lib/api')
 
@@ -41,6 +32,7 @@ const mockFiles: api.AnalyticsFile[] = [
 ]
 
 beforeEach(() => {
+  vi.resetAllMocks()
   vi.mocked(api.getAnalyticsOverview).mockResolvedValue(mockOverview)
   vi.mocked(api.getQualityOverTime).mockResolvedValue(mockQualityTime)
   vi.mocked(api.getAnalyticsSessions).mockResolvedValue(mockSessions)
@@ -48,33 +40,38 @@ beforeEach(() => {
 })
 
 describe('Dashboard', () => {
-  it('shows loading state initially', () => {
+  it('returns null before data loads', () => {
     render(<Dashboard />)
-    expect(screen.getByText(/loading dashboard/i)).toBeInTheDocument()
+    // Component returns null while fetching — stat cards not yet present
+    expect(screen.queryByTestId('stat-total-sessions')).not.toBeInTheDocument()
   })
 
   it('renders Total Sessions stat card with correct value', async () => {
     render(<Dashboard />)
-    await waitFor(() => expect(screen.getByText('3')).toBeInTheDocument())
+    await waitFor(() =>
+      expect(screen.getByTestId('stat-total-sessions')).toHaveTextContent('3'),
+    )
   })
 
   it('renders Student Messages stat card with correct value', async () => {
     render(<Dashboard />)
-    await waitFor(() => expect(screen.getByText('15')).toBeInTheDocument())
+    await waitFor(() =>
+      expect(screen.getByTestId('stat-total-messages')).toHaveTextContent('15'),
+    )
   })
 
   it('renders top thinking level badge (developing wins with 7)', async () => {
     render(<Dashboard />)
-    await waitFor(() => {
-      // The badge is the first element with "developing" text (not the table header)
-      const elements = screen.getAllByText(/developing/i)
-      expect(elements.length).toBeGreaterThan(0)
-    })
+    await waitFor(() =>
+      expect(screen.getByTestId('badge-top-level')).toHaveTextContent('developing'),
+    )
   })
 
-  it('renders session file name in table', async () => {
+  it('renders session file name in sessions table', async () => {
     render(<Dashboard />)
-    await waitFor(() => expect(screen.getByText(/airbnb ipo case/i)).toBeInTheDocument())
+    await waitFor(() =>
+      expect(screen.getByTestId('sessions-table')).toHaveTextContent(/airbnb ipo case/i),
+    )
   })
 
   it('shows empty state for sessions when list is empty', async () => {
@@ -100,13 +97,13 @@ describe('Dashboard', () => {
     ]
     vi.mocked(api.getAnalyticsSessions).mockResolvedValue(twoSessions)
     render(<Dashboard />)
-    await waitFor(() => screen.getByText(/airbnb/i))
+    const table = await screen.findByTestId('sessions-table')
 
     // Default sort (last active): Airbnb first (newer date)
-    const rows = () => screen.getAllByRole('row').slice(1) // skip header
+    const rows = () => within(table).getAllByRole('row').slice(1) // skip header
     expect(rows()[0]).toHaveTextContent(/airbnb/i)
 
-    fireEvent.click(screen.getAllByText('Messages')[0])
+    fireEvent.click(screen.getByRole('button', { name: 'Messages' }))
     // After sort by message count: Netflix first (5 > 2)
     expect(rows()[0]).toHaveTextContent(/netflix/i)
   })

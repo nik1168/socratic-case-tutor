@@ -73,6 +73,8 @@ export async function getMessages(sessionId: string, fileId: string): Promise<Me
   return data as MessageItem[]
 }
 
+// ── Analytics types ──────────────────────────────────────────────────────────
+
 export interface AnalyticsOverview {
   total_sessions: number
   total_messages: number

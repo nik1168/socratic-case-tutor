@@ -15,6 +15,13 @@ export default function HomePage() {
         </span>
         <div className="flex items-center gap-3">
           <Link
+            href="/dashboard"
+            className="flex items-center gap-2 px-4 py-2 text-sm rounded transition-all"
+            style={{ color: 'var(--text-muted)', fontFamily: mono, fontSize: '12px', letterSpacing: '0.04em', textDecoration: 'none' }}
+          >
+            dashboard →
+          </Link>
+          <Link
             href="/upload"
             className="flex items-center gap-2 px-4 py-2 text-sm rounded transition-all"
             style={{ border: '1px solid var(--gold-border)', color: 'var(--gold)', fontFamily: mono, fontSize: '12px', letterSpacing: '0.04em', textDecoration: 'none' }}
