@@ -184,3 +184,34 @@ async def get_analytics_sessions(pool) -> list[dict]:
         }
         for row in rows
     ]
+
+
+async def get_analytics_files(pool) -> list[dict]:
+    rows = await pool.fetch(
+        """
+        SELECT
+            s.file_id,
+            MAX(s.file_name) AS file_name,
+            COUNT(DISTINCT s.session_id)::int AS session_count,
+            COUNT(CASE WHEN m.role = 'user' THEN 1 END)::int AS message_count,
+            COUNT(CASE WHEN m.thinking_quality = 'shallow' THEN 1 END)::int AS shallow,
+            COUNT(CASE WHEN m.thinking_quality = 'developing' THEN 1 END)::int AS developing,
+            COUNT(CASE WHEN m.thinking_quality = 'insightful' THEN 1 END)::int AS insightful
+        FROM sessions s
+        LEFT JOIN messages m ON m.session_id = s.session_id AND m.file_id = s.file_id
+        GROUP BY s.file_id
+        ORDER BY COUNT(CASE WHEN m.role = 'user' THEN 1 END) DESC
+        """
+    )
+    return [
+        {
+            "file_id": row["file_id"],
+            "file_name": row["file_name"],
+            "session_count": row["session_count"],
+            "message_count": row["message_count"],
+            "shallow": row["shallow"],
+            "developing": row["developing"],
+            "insightful": row["insightful"],
+        }
+        for row in rows
+    ]

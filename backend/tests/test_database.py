@@ -5,6 +5,7 @@ import asyncpg
 import pytest
 
 from src.database import (
+    get_analytics_files,
     get_analytics_overview,
     get_analytics_sessions,
     get_messages,
@@ -166,3 +167,28 @@ async def test_analytics_sessions_returns_per_session_stats(conn):
     assert row["insightful"] == 1
     assert row["shallow"] == 0
     assert "last_active_at" in row
+
+
+async def test_analytics_files_aggregates_across_sessions(conn):
+    # Two different students use the same file_id
+    await upsert_session(conn, "s1", "f1", "airbnb.pdf")
+    await upsert_session(conn, "s2", "f1", "airbnb.pdf")
+    await save_messages(conn, "s1", "f1", [
+        {"role": "user", "content": "Q"},
+        {"role": "assistant", "content": "A", "response_type": "socratic_response",
+         "thinking_quality": "shallow", "feedback": "ok"},
+    ])
+    await save_messages(conn, "s2", "f1", [
+        {"role": "user", "content": "Q"},
+        {"role": "assistant", "content": "A", "response_type": "socratic_response",
+         "thinking_quality": "insightful", "feedback": "great"},
+    ])
+    rows = await get_analytics_files(conn)
+    assert len(rows) == 1
+    row = rows[0]
+    assert row["file_id"] == "f1"
+    assert row["file_name"] == "airbnb.pdf"
+    assert row["session_count"] == 2
+    assert row["message_count"] == 2   # user messages across both sessions
+    assert row["shallow"] == 1
+    assert row["insightful"] == 1
