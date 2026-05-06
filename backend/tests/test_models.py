@@ -1,7 +1,16 @@
 import pytest
 from pydantic import ValidationError
 
-from src.models import ChatRequest, ChatResponse, MessageItem, SessionItem
+from src.models import (
+    AnalyticsFile,
+    AnalyticsOverview,
+    AnalyticsSession,
+    ChatRequest,
+    ChatResponse,
+    MessageItem,
+    QualityDay,
+    SessionItem,
+)
 
 
 def test_chat_request_requires_session_id():
@@ -90,11 +99,6 @@ def test_message_item_optional_fields_default_to_none():
 def test_message_item_rejects_invalid_role():
     with pytest.raises(ValidationError):
         MessageItem(role="system", content="hello")
-
-
-from src.models import (
-    AnalyticsOverview, QualityDay, AnalyticsSession, AnalyticsFile,
-)
 
 
 def test_analytics_overview_shape():
