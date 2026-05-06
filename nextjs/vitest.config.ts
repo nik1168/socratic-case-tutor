@@ -9,6 +9,7 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['./vitest.setup.ts'],
     passWithNoTests: true,
+    exclude: ['**/node_modules/**', '**/e2e/**'],
     env: {
       NEXT_PUBLIC_API_URL: 'http://localhost:8000',
     },

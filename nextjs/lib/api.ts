@@ -72,3 +72,69 @@ export async function getMessages(sessionId: string, fileId: string): Promise<Me
   if (!Array.isArray(data)) throw new Error('getMessages: unexpected response shape')
   return data as MessageItem[]
 }
+
+// ── Analytics types ──────────────────────────────────────────────────────────
+
+export interface OverviewData {
+  total_sessions: number
+  total_messages: number
+  quality_distribution: { shallow: number; developing: number; insightful: number }
+}
+
+export interface QualityTimePoint {
+  date: string
+  shallow: number
+  developing: number
+  insightful: number
+}
+
+export interface SessionAnalytics {
+  session_id: string
+  file_id: string
+  file_name: string
+  last_active_at: string
+  message_count: number
+  shallow: number
+  developing: number
+  insightful: number
+}
+
+export interface FileAnalytics {
+  file_id: string
+  file_name: string
+  session_count: number
+  message_count: number
+  shallow: number
+  developing: number
+  insightful: number
+}
+
+export async function getAnalyticsOverview(): Promise<OverviewData> {
+  const res = await fetch(`${API_URL}/analytics/overview`)
+  if (!res.ok) throw new Error(`getAnalyticsOverview failed: ${res.status}`)
+  return res.json() as Promise<OverviewData>
+}
+
+export async function getAnalyticsQualityOverTime(): Promise<QualityTimePoint[]> {
+  const res = await fetch(`${API_URL}/analytics/quality-over-time`)
+  if (!res.ok) throw new Error(`getAnalyticsQualityOverTime failed: ${res.status}`)
+  const data = await res.json()
+  if (!Array.isArray(data)) throw new Error('getAnalyticsQualityOverTime: unexpected response shape')
+  return data as QualityTimePoint[]
+}
+
+export async function getAnalyticsSessions(): Promise<SessionAnalytics[]> {
+  const res = await fetch(`${API_URL}/analytics/sessions`)
+  if (!res.ok) throw new Error(`getAnalyticsSessions failed: ${res.status}`)
+  const data = await res.json()
+  if (!Array.isArray(data)) throw new Error('getAnalyticsSessions: unexpected response shape')
+  return data as SessionAnalytics[]
+}
+
+export async function getAnalyticsFiles(): Promise<FileAnalytics[]> {
+  const res = await fetch(`${API_URL}/analytics/files`)
+  if (!res.ok) throw new Error(`getAnalyticsFiles failed: ${res.status}`)
+  const data = await res.json()
+  if (!Array.isArray(data)) throw new Error('getAnalyticsFiles: unexpected response shape')
+  return data as FileAnalytics[]
+}
