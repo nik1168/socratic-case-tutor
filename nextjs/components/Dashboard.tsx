@@ -183,7 +183,7 @@ export default function Dashboard() {
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--border)' }}>
-                  {['Case Study', 'Last Active', 'Msgs', 'Shallow', 'Devel.', 'Insight.'].map((h) => (
+                  {['Case Study', 'Last Active', 'Messages', 'Shallow', 'Developing', 'Insightful'].map((h) => (
                     <th key={h} style={{ textAlign: 'left', padding: '8px 12px', fontFamily: mono, fontSize: '11px', letterSpacing: '0.06em', color: 'var(--text-dim)', textTransform: 'uppercase', fontWeight: 400 }}>
                       {h}
                     </th>
