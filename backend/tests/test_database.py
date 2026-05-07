@@ -24,6 +24,7 @@ async def conn():
         tr = c.transaction()
         await tr.start()
         await init_db(c)
+        await c.execute('TRUNCATE messages, sessions RESTART IDENTITY CASCADE')
         yield c
         await tr.rollback()
     await pool.close()
