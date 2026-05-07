@@ -3,7 +3,39 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from langchain_core.messages import AIMessage, HumanMessage
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 
-from src.evaluator import EVALUATE_PROMPT, evaluate_message
+from src.evaluator import EVALUATE_PROMPT, _build_chain, evaluate_message
+
+
+def test_build_chain_returns_a_runnable():
+    with patch("src.evaluator.ChatAnthropic"):
+        chain = _build_chain()
+    assert chain is not None
+
+
+async def test_evaluate_message_normalises_invalid_thinking_quality():
+    mock_result = MagicMock()
+    mock_result.content = '{"thinking_quality": "medium", "feedback": "Some feedback."}'
+    mock_chain = MagicMock()
+    mock_chain.ainvoke = AsyncMock(return_value=mock_result)
+
+    with patch("src.evaluator._build_chain", return_value=mock_chain):
+        result = await evaluate_message("Some question", [])
+
+    assert result["thinking_quality"] == "developing"
+    assert result["feedback"] == "Some feedback."
+
+
+async def test_evaluate_message_normalises_non_string_feedback():
+    mock_result = MagicMock()
+    mock_result.content = '{"thinking_quality": "shallow", "feedback": 42}'
+    mock_chain = MagicMock()
+    mock_chain.ainvoke = AsyncMock(return_value=mock_result)
+
+    with patch("src.evaluator._build_chain", return_value=mock_chain):
+        result = await evaluate_message("Some question", [])
+
+    assert result["thinking_quality"] == "shallow"
+    assert result["feedback"] == ""
 
 
 def test_evaluate_prompt_has_no_spurious_template_variables():

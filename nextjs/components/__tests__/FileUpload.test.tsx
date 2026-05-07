@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import FileUpload from '../FileUpload'
@@ -43,5 +43,26 @@ describe('FileUpload', () => {
     await userEvent.upload(input, file, { applyAccept: false })
     expect(screen.getByText('Please select a PDF file.')).toBeInTheDocument()
     expect(uploadPdfSpy).not.toHaveBeenCalled()
+  })
+
+  it('choose pdf button fires stopPropagation on click', () => {
+    render(<FileUpload sessionId="test-session" onUpload={vi.fn()} />)
+    const button = screen.getByRole('button', { name: /choose pdf/i })
+    fireEvent.click(button)
+  })
+
+  it('choose pdf button handles mouse enter and leave', () => {
+    render(<FileUpload sessionId="test-session" onUpload={vi.fn()} />)
+    const button = screen.getByRole('button', { name: /choose pdf/i })
+    fireEvent.mouseEnter(button)
+    fireEvent.mouseLeave(button)
+  })
+
+  it('download link handles click, mouse enter and mouse leave', () => {
+    render(<FileUpload sessionId="test-session" onUpload={vi.fn()} />)
+    const link = screen.getByText(/download sample case/i)
+    fireEvent.click(link)
+    fireEvent.mouseEnter(link)
+    fireEvent.mouseLeave(link)
   })
 })

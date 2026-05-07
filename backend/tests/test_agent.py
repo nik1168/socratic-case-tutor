@@ -1,9 +1,96 @@
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from langchain_core.documents import Document
 from langchain_core.messages import AIMessage, HumanMessage
+from langchain_core.runnables import RunnableLambda
 
-from src.agent import run_agent
+from src.agent import _format_context, build_graph, run_agent
+
+
+def test_format_context_joins_page_contents():
+    docs = [Document(page_content="First chunk"), Document(page_content="Second chunk")]
+    assert _format_context(docs) == "First chunk\n\nSecond chunk"
+
+
+def test_format_context_returns_empty_string_for_no_docs():
+    assert _format_context([]) == ""
+
+
+async def test_build_graph_executes_socratic_flow():
+    responses = iter(["socratic", "What do you think drove their growth?"])
+
+    async def mock_llm_fn(messages):
+        return MagicMock(content=next(responses))
+
+    mock_retriever = MagicMock()
+    mock_retriever.ainvoke = AsyncMock(return_value=[Document(page_content="case context")])
+
+    with patch("src.agent.ChatAnthropic", return_value=RunnableLambda(mock_llm_fn)), \
+         patch("src.agent.get_retriever", return_value=mock_retriever):
+        graph = build_graph("file-id")
+        result = await graph.ainvoke({
+            "input": "Why did they succeed?",
+            "chat_history": [],
+            "context": [],
+            "assessment": "",
+            "answer": "",
+            "response_type": "",
+        })
+
+    assert result["response_type"] == "socratic_response"
+    assert result["answer"] == "What do you think drove their growth?"
+    assert result["assessment"] == "socratic"
+
+
+async def test_build_graph_executes_clarify_flow():
+    responses = iter(["clarify", "Can you be more specific?"])
+
+    async def mock_llm_fn(messages):
+        return MagicMock(content=next(responses))
+
+    mock_retriever = MagicMock()
+    mock_retriever.ainvoke = AsyncMock(return_value=[])
+
+    with patch("src.agent.ChatAnthropic", return_value=RunnableLambda(mock_llm_fn)), \
+         patch("src.agent.get_retriever", return_value=mock_retriever):
+        graph = build_graph("file-id")
+        result = await graph.ainvoke({
+            "input": "Why?",
+            "chat_history": [],
+            "context": [],
+            "assessment": "",
+            "answer": "",
+            "response_type": "",
+        })
+
+    assert result["response_type"] == "clarification"
+    assert result["answer"] == "Can you be more specific?"
+
+
+async def test_build_graph_assess_falls_back_to_socratic_on_invalid_llm_response():
+    responses = iter(["neither_clarify_nor_socratic", "Here is a Socratic response."])
+
+    async def mock_llm_fn(messages):
+        return MagicMock(content=next(responses))
+
+    mock_retriever = MagicMock()
+    mock_retriever.ainvoke = AsyncMock(return_value=[])
+
+    with patch("src.agent.ChatAnthropic", return_value=RunnableLambda(mock_llm_fn)), \
+         patch("src.agent.get_retriever", return_value=mock_retriever):
+        graph = build_graph("file-id")
+        result = await graph.ainvoke({
+            "input": "Tell me about this.",
+            "chat_history": [],
+            "context": [],
+            "assessment": "",
+            "answer": "",
+            "response_type": "",
+        })
+
+    assert result["assessment"] == "socratic"
+    assert result["response_type"] == "socratic_response"
 
 
 async def test_run_agent_returns_socratic_response():

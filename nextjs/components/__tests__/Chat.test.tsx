@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import Chat from '../Chat'
@@ -93,6 +93,29 @@ describe('Chat', () => {
     await waitFor(() =>
       expect(screen.getByText('Error: could not reach the backend.')).toBeInTheDocument()
     )
+  })
+
+  it('renders markdown elements in assistant messages', async () => {
+    vi.mocked(api.sendMessage).mockResolvedValue({
+      response: '**Bold** and *italic* and a list:\n- item one\n- item two',
+      responseType: 'socratic_response',
+      thinkingQuality: 'developing',
+      feedback: '',
+    })
+    render(<Chat fileId="file-1" sessionId="test-session" />)
+    await waitFor(() => expect(api.getMessages).toHaveBeenCalled())
+    await userEvent.type(screen.getByRole('textbox'), 'What about formatting?')
+    await userEvent.click(screen.getByRole('button', { name: /send/i }))
+    await waitFor(() => expect(screen.getByText('Bold')).toBeInTheDocument())
+    expect(screen.getByText(/italic/i)).toBeInTheDocument()
+    expect(screen.getByText('item one')).toBeInTheDocument()
+  })
+
+  it('send button handles mouse enter and mouse leave', () => {
+    render(<Chat fileId="file-1" sessionId="test-session" />)
+    const button = screen.getByRole('button', { name: /send/i })
+    fireEvent.mouseEnter(button)
+    fireEvent.mouseLeave(button)
   })
 
   it('does not send a message when sessionId is empty', async () => {

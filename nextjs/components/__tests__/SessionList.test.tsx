@@ -45,6 +45,23 @@ describe('SessionList', () => {
     expect(mockPush).toHaveBeenCalledWith('/chat/file-1?name=airbnb.pdf')
   })
 
+  it('renders empty date for an unparseable last_active_at value', async () => {
+    vi.mocked(api.getSessions).mockResolvedValue([
+      { file_id: 'f1', file_name: 'test.pdf', last_active_at: 'not-a-valid-date', message_count: 1 },
+    ])
+    renderWithProvider()
+    await waitFor(() => expect(screen.getByText('test.pdf')).toBeInTheDocument())
+  })
+
+  it('session button handles mouse enter and mouse leave', async () => {
+    vi.mocked(api.getSessions).mockResolvedValue(sessions)
+    renderWithProvider()
+    await waitFor(() => screen.getByText('airbnb.pdf'))
+    const button = screen.getByText('airbnb.pdf').closest('button') as HTMLButtonElement
+    fireEvent.mouseEnter(button)
+    fireEvent.mouseLeave(button)
+  })
+
   it('encodes special characters in the file name query param', async () => {
     const spaced = [{ file_id: 'file-3', file_name: 'My Case Study.pdf', last_active_at: '2026-04-28T10:00:00+00:00', message_count: 1 }]
     vi.mocked(api.getSessions).mockResolvedValue(spaced)

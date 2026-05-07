@@ -116,6 +116,84 @@ def test_chat_saves_messages_after_response(client, fake_pdf_bytes):
     assert messages[1]["feedback"] == "Great thinking."
 
 
+def test_chat_returns_502_when_agent_raises(client, fake_pdf_bytes):
+    upload_response = client.post(
+        "/upload",
+        files={"file": ("case.pdf", io.BytesIO(fake_pdf_bytes), "application/pdf")},
+        data={"session_id": "test-session"},
+    )
+    file_id = upload_response.json()["file_id"]
+
+    with patch(
+        "src.main.run_agent",
+        new_callable=AsyncMock,
+        side_effect=RuntimeError("LLM unavailable"),
+    ), patch(
+        "src.main.evaluate_message",
+        new_callable=AsyncMock,
+        return_value={"thinking_quality": "developing", "feedback": ""},
+    ):
+        response = client.post(
+            "/chat",
+            json={"file_id": file_id, "session_id": "test-session", "message": "Hello"},
+        )
+
+    assert response.status_code == 502
+
+
+def test_chat_continues_when_evaluator_raises(client, fake_pdf_bytes):
+    upload_response = client.post(
+        "/upload",
+        files={"file": ("case.pdf", io.BytesIO(fake_pdf_bytes), "application/pdf")},
+        data={"session_id": "test-session"},
+    )
+    file_id = upload_response.json()["file_id"]
+
+    with patch(
+        "src.main.run_agent",
+        new_callable=AsyncMock,
+        return_value={"answer": "Great question.", "response_type": "socratic_response"},
+    ), patch(
+        "src.main.evaluate_message",
+        new_callable=AsyncMock,
+        side_effect=RuntimeError("Evaluator failed"),
+    ):
+        response = client.post(
+            "/chat",
+            json={"file_id": file_id, "session_id": "test-session", "message": "Hello"},
+        )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["thinking_quality"] == "developing"
+    assert data["feedback"] == ""
+
+
+def test_chat_returns_502_when_agent_returns_empty_answer(client, fake_pdf_bytes):
+    upload_response = client.post(
+        "/upload",
+        files={"file": ("case.pdf", io.BytesIO(fake_pdf_bytes), "application/pdf")},
+        data={"session_id": "test-session"},
+    )
+    file_id = upload_response.json()["file_id"]
+
+    with patch(
+        "src.main.run_agent",
+        new_callable=AsyncMock,
+        return_value={"answer": "", "response_type": "socratic_response"},
+    ), patch(
+        "src.main.evaluate_message",
+        new_callable=AsyncMock,
+        return_value={"thinking_quality": "developing", "feedback": ""},
+    ):
+        response = client.post(
+            "/chat",
+            json={"file_id": file_id, "session_id": "test-session", "message": "Hello"},
+        )
+
+    assert response.status_code == 502
+
+
 def test_chat_returns_404_when_chroma_index_missing(client, fake_pdf_bytes, tmp_path, monkeypatch):
     import src.main as main_module
 
