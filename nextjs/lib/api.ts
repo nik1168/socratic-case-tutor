@@ -1,6 +1,10 @@
 // nextjs/lib/api.ts
-const API_URL = process.env.NEXT_PUBLIC_API_URL
-if (!API_URL) throw new Error('NEXT_PUBLIC_API_URL is not set')
+const _API_URL = process.env.NEXT_PUBLIC_API_URL ?? ''
+
+function apiUrl(): string {
+  if (!_API_URL) throw new Error('NEXT_PUBLIC_API_URL is not set')
+  return _API_URL
+}
 
 export type ResponseType = 'clarification' | 'socratic_response'
 
@@ -28,7 +32,7 @@ export async function uploadPdf(file: File, sessionId: string): Promise<string> 
   const form = new FormData()
   form.append('file', file)
   form.append('session_id', sessionId)
-  const res = await fetch(`${API_URL}/upload`, { method: 'POST', body: form })
+  const res = await fetch(`${apiUrl()}/upload`, { method: 'POST', body: form })
   if (!res.ok) throw new Error(`Upload failed: ${res.statusText}`)
   const data = await res.json()
   const fileId = data?.file_id
@@ -41,7 +45,7 @@ export async function sendMessage(
   sessionId: string,
   message: string,
 ): Promise<{ response: string; responseType: ResponseType; thinkingQuality: string; feedback: string }> {
-  const res = await fetch(`${API_URL}/chat`, {
+  const res = await fetch(`${apiUrl()}/chat`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ file_id: fileId, session_id: sessionId, message }),
@@ -58,7 +62,7 @@ export async function sendMessage(
 }
 
 export async function getSessions(sessionId: string): Promise<SessionItem[]> {
-  const res = await fetch(`${API_URL}/sessions/${sessionId}`)
+  const res = await fetch(`${apiUrl()}/sessions/${sessionId}`)
   if (!res.ok) throw new Error(`getSessions failed: ${res.status}`)
   const data = await res.json()
   if (!Array.isArray(data)) throw new Error('getSessions: unexpected response shape')
@@ -66,7 +70,7 @@ export async function getSessions(sessionId: string): Promise<SessionItem[]> {
 }
 
 export async function getMessages(sessionId: string, fileId: string): Promise<MessageItem[]> {
-  const res = await fetch(`${API_URL}/sessions/${sessionId}/${fileId}/messages`)
+  const res = await fetch(`${apiUrl()}/sessions/${sessionId}/${fileId}/messages`)
   if (!res.ok) throw new Error(`getMessages failed: ${res.status}`)
   const data = await res.json()
   if (!Array.isArray(data)) throw new Error('getMessages: unexpected response shape')
@@ -114,13 +118,13 @@ export interface AnalyticsFile {
 }
 
 export async function getAnalyticsOverview(): Promise<AnalyticsOverview> {
-  const res = await fetch(`${API_URL}/analytics/overview`)
+  const res = await fetch(`${apiUrl()}/analytics/overview`)
   if (!res.ok) throw new Error(`getAnalyticsOverview failed: ${res.status}`)
   return res.json() as Promise<AnalyticsOverview>
 }
 
 export async function getQualityOverTime(): Promise<QualityDay[]> {
-  const res = await fetch(`${API_URL}/analytics/quality-over-time`)
+  const res = await fetch(`${apiUrl()}/analytics/quality-over-time`)
   if (!res.ok) throw new Error(`getQualityOverTime failed: ${res.status}`)
   const data = await res.json()
   if (!Array.isArray(data)) throw new Error('getQualityOverTime: unexpected response shape')
@@ -128,7 +132,7 @@ export async function getQualityOverTime(): Promise<QualityDay[]> {
 }
 
 export async function getAnalyticsSessions(): Promise<AnalyticsSession[]> {
-  const res = await fetch(`${API_URL}/analytics/sessions`)
+  const res = await fetch(`${apiUrl()}/analytics/sessions`)
   if (!res.ok) throw new Error(`getAnalyticsSessions failed: ${res.status}`)
   const data = await res.json()
   if (!Array.isArray(data)) throw new Error('getAnalyticsSessions: unexpected response shape')
@@ -136,7 +140,7 @@ export async function getAnalyticsSessions(): Promise<AnalyticsSession[]> {
 }
 
 export async function getAnalyticsFiles(): Promise<AnalyticsFile[]> {
-  const res = await fetch(`${API_URL}/analytics/files`)
+  const res = await fetch(`${apiUrl()}/analytics/files`)
   if (!res.ok) throw new Error(`getAnalyticsFiles failed: ${res.status}`)
   const data = await res.json()
   if (!Array.isArray(data)) throw new Error('getAnalyticsFiles: unexpected response shape')
