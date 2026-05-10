@@ -8,3 +8,5 @@ htmlcov/
 chroma/
 uploads/
 *.env
+.pytest_cache/
+.python-version
