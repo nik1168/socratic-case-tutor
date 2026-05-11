@@ -9,10 +9,10 @@ terraform {
   }
 
   backend "s3" {
-    bucket         = "case-tutor-tfstate-<YOUR_ACCOUNT_ID>"
+    bucket         = "case-tutor-tfstate-932566365245"
     key            = "prod/terraform.tfstate"
     region         = "us-east-1"
-    dynamodb_table = "case-tutor-terraform-locks"
+    use_lockfile   = true
     encrypt        = true
   }
 }
