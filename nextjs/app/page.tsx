@@ -28,13 +28,6 @@ export default function HomePage() {
           >
             new case →
           </Link>
-          <Link
-            href="/dashboard"
-            className="flex items-center gap-2 px-4 py-2 text-sm rounded transition-all"
-            style={{ border: '1px solid var(--border)', color: 'var(--text-muted)', fontFamily: mono, fontSize: '12px', letterSpacing: '0.04em', textDecoration: 'none' }}
-          >
-            dashboard →
-          </Link>
           <ThemeToggle />
         </div>
       </header>
